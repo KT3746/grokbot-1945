@@ -127,7 +127,7 @@ export class Game {
     const touchSpawn =
       typeof matchMedia !== "undefined" &&
       matchMedia("(max-width: 720px), (pointer: coarse)").matches;
-    this.player.y = touchSpawn ? H - 168 : H - 78;
+    this.player.y = touchSpawn ? Math.floor(H * 0.68) : H - 78;
     this.player.invuln = INVULN_TIME;
     this.player.alive = true;
     this.player.fireCd = 0.2;
