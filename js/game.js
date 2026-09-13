@@ -127,7 +127,7 @@ export class Game {
     const touchSpawn =
       typeof matchMedia !== "undefined" &&
       matchMedia("(max-width: 720px), (pointer: coarse)").matches;
-    this.player.y = touchSpawn ? H - 120 : H - 78;
+    this.player.y = touchSpawn ? H - 168 : H - 78;
     this.player.invuln = INVULN_TIME;
     this.player.alive = true;
     this.player.fireCd = 0.2;
@@ -185,7 +185,7 @@ export class Game {
         !!input.touchEnabled ||
         (typeof matchMedia !== "undefined" &&
           matchMedia("(max-width: 720px), (pointer: coarse)").matches);
-      const yMax = touchUI ? H - 110 : H - 28;
+      const yMax = touchUI ? H - 150 : H - 28;
       if (input.aimActive) {
         // arraste relativo amplificado — responde na hora
         p.x = clamp(p.x + (input.aimDX || 0), 16, W - 16);
