@@ -62,12 +62,16 @@ function frame(now) {
   }
 
   game.update(dt, input);
-  // durante overlay, não atualiza música intensa / reduz trabalho
+  // áudio nunca pode derrubar o frame (senão o avião some)
   if (game.mode === "playing") {
-    audio.update(dt);
-    audio.setIntense(game.boss ? 1 : 0);
+    try {
+      audio.update(dt);
+      audio.setIntense(game.boss ? 1 : 0);
+    } catch (_) {}
   }
-  renderer.draw(game);
+  try {
+    renderer.draw(game);
+  } catch (_) {}
 
   if (game.mode !== lastMode) {
     const overlay =
