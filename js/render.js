@@ -44,6 +44,9 @@ export class Renderer {
 
     ctx.imageSmoothingEnabled = false;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.filter = "none";
+    ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = pal.sea0;
     ctx.fillRect(0, 0, W, H);
 
@@ -57,8 +60,8 @@ export class Renderer {
 
     if (game.mode !== "title" && game.mode !== "howto") {
       this._pickups(ctx, game);
-      this._enemies(ctx, game);
       this._player(ctx, game);
+      this._enemies(ctx, game);
       this._bullets(ctx, game);
       game.fx.draw(ctx);
       this._combo(ctx, game);
@@ -246,12 +249,12 @@ export class Renderer {
       const y = (it.y + scroll * (mul / 0.55)) % (H + 170) - 85;
       const spr = pack[it.i % pack.length];
       const s = it.s * (key === "tropic" ? 1.05 : key === "fortress" ? 1.15 : 1);
-      if (key === "storm") {
-        ctx.globalAlpha = 0.75;
-        ctx.filter = "brightness(0.55)";
-      }
+      if (key === "storm") ctx.globalAlpha = 0.55;
       ctx.drawImage(spr, it.x - spr.width * s * 0.5, y, spr.width * s, spr.height * s);
-      ctx.filter = "none";
+      if (key === "storm") {
+        ctx.fillStyle = "rgba(10,20,40,0.35)";
+        ctx.fillRect(it.x - spr.width * s * 0.5, y, spr.width * s, spr.height * s);
+      }
       ctx.globalAlpha = 1;
       // sombra na água
       if (key !== "fortress") {
@@ -419,8 +422,11 @@ export class Renderer {
   _player(ctx, game) {
     const p = game.player;
     if (!p.alive) return;
+    ctx.filter = "none";
+    ctx.globalCompositeOperation = "source-over";
     const blink = p.invuln > 0 && ((p.invuln * 12) | 0) % 2 === 0;
     if (blink && p.invuln > 0.2) ctx.globalAlpha = 0.4;
+    else ctx.globalAlpha = 1;
     // afterburner
     const flame = 6 + Math.sin(this.time * 28) * 2.5;
     const fg = ctx.createLinearGradient(p.x, p.y + 14, p.x, p.y + 14 + flame + 8);
@@ -460,13 +466,23 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
+  _enemyWash(key) {
+    // vinheta leve por fase (sem ctx.filter — quebra sprites no iOS/Safari)
+    if (key === "tropic") return "rgba(80,200,160,0.14)";
+    if (key === "overcast") return "rgba(40,60,80,0.22)";
+    if (key === "dusk") return "rgba(255,100,40,0.18)";
+    if (key === "storm") return "rgba(60,120,200,0.2)";
+    if (key === "fortress") return "rgba(180,140,60,0.16)";
+    return null;
+  }
+
   _enemies(ctx, game) {
-    const tint = this._enemyTint(game.palette());
+    const wash = this._enemyWash(game.palette());
+    ctx.filter = "none";
+    ctx.globalAlpha = 1;
     for (const e of game.enemies) {
       if (e.dead) continue;
       const spr = this.sprites[e.kind] || this.sprites.vespa;
-      if (e.flash > 0) ctx.filter = "brightness(2.4)";
-      else if (tint) ctx.filter = tint;
       if (e.telegraph > 0) {
         const pulse = 0.45 + Math.sin(this.time * 18) * 0.2;
         ctx.save();
@@ -499,11 +515,23 @@ export class Renderer {
       const dw = spr.width * sc;
       const dh = spr.height * sc;
       ctx.drawImage(spr, e.x - dw / 2, e.y - dh / 2, dw, dh);
-      ctx.filter = "none";
+      if (e.flash > 0) {
+        ctx.globalAlpha = Math.min(0.85, e.flash * 4);
+        ctx.fillStyle = "#fff8e0";
+        ctx.fillRect(e.x - dw / 2, e.y - dh / 2, dw, dh);
+        ctx.globalAlpha = 1;
+      } else if (wash) {
+        ctx.fillStyle = wash;
+        ctx.beginPath();
+        ctx.ellipse(e.x, e.y, dw * 0.42, dh * 0.42, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
       if (e.kind === "vespa" || e.kind === "gaviao" || e.kind === "as" || e.kind === "artilheiro") {
         drawProp(ctx, e.x, e.y + spr.height / 2 - 4, this.time * 1.2 + e.phase, "rgba(200,200,180,0.35)");
       }
     }
+    ctx.filter = "none";
+    ctx.globalAlpha = 1;
   }
 
   _bullets(ctx, game) {
