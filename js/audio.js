@@ -88,6 +88,16 @@ export class AudioSys {
     return 1100;
   }
 
+  _stageTempo() {
+    const p = this._palette;
+    if (p === "tropic") return 0.52;
+    if (p === "overcast") return 0.44;
+    if (p === "dusk") return 0.38;
+    if (p === "storm") return 0.28;
+    if (p === "fortress") return 0.36;
+    return 0.44;
+  }
+
   setStage(index, palette) {
     this._stageId = index | 0;
     this._palette = palette || "tropic";
