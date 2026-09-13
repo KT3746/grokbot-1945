@@ -45,7 +45,6 @@ export class Renderer {
     ctx.imageSmoothingEnabled = false;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
-    ctx.filter = "none";
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = pal.sea0;
     ctx.fillRect(0, 0, W, H);
@@ -59,14 +58,14 @@ export class Renderer {
     this._stageFX(ctx, game.bgScroll, key);
 
     if (game.mode !== "title" && game.mode !== "howto") {
-      this._pickups(ctx, game);
-      this._player(ctx, game);
-      this._enemies(ctx, game);
-      this._bullets(ctx, game);
-      game.fx.draw(ctx);
-      this._combo(ctx, game);
-      this._status(ctx, game);
-      this._banner(ctx, game);
+      try { this._pickups(ctx, game); } catch (_) {}
+      try { this._player(ctx, game); } catch (_) {}
+      try { this._enemies(ctx, game); } catch (_) {}
+      try { this._bullets(ctx, game); } catch (_) {}
+      try { game.fx.draw(ctx); } catch (_) {}
+      try { this._combo(ctx, game); } catch (_) {}
+      try { this._status(ctx, game); } catch (_) {}
+      try { this._banner(ctx, game); } catch (_) {}
     }
     ctx.restore();
 
@@ -421,49 +420,122 @@ export class Renderer {
 
   _player(ctx, game) {
     const p = game.player;
-    if (!p.alive) return;
-    ctx.filter = "none";
+    if (!p || !p.alive) return;
+    const x = p.x;
+    const y = p.y;
+    if (!(x >= -40 && x <= W + 40 && y >= -40 && y <= H + 40)) return;
+
+    ctx.save();
+    ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
     const blink = p.invuln > 0 && ((p.invuln * 12) | 0) % 2 === 0;
-    if (blink && p.invuln > 0.2) ctx.globalAlpha = 0.4;
-    else ctx.globalAlpha = 1;
-    // afterburner
-    const flame = 6 + Math.sin(this.time * 28) * 2.5;
-    const fg = ctx.createLinearGradient(p.x, p.y + 14, p.x, p.y + 14 + flame + 8);
-    fg.addColorStop(0, "rgba(200,240,255,0.9)");
-    fg.addColorStop(0.45, "rgba(80,160,255,0.45)");
-    fg.addColorStop(1, "rgba(40,80,255,0)");
-    ctx.fillStyle = fg;
+    if (blink && p.invuln > 0.2) ctx.globalAlpha = 0.55;
+
+    // afterburner (paths only — sem drawImage)
+    const flame = 7 + Math.sin(this.time * 28) * 3;
+    ctx.fillStyle = "rgba(180,230,255,0.9)";
     ctx.beginPath();
-    ctx.moveTo(p.x - 3, p.y + 14);
-    ctx.lineTo(p.x + 3, p.y + 14);
-    ctx.lineTo(p.x, p.y + 16 + flame);
+    ctx.moveTo(x - 4, y + 14);
+    ctx.lineTo(x + 4, y + 14);
+    ctx.lineTo(x, y + 16 + flame);
+    ctx.closePath();
     ctx.fill();
-    ctx.drawImage(this.sprites.player, p.x - 16, p.y - 20);
-    drawProp(ctx, p.x, p.y - 18, this.time, "rgba(240,240,220,0.55)");
-    if (p.shield > 0) {
-      ctx.strokeStyle = "rgba(120,200,255,0.7)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 18 + Math.sin(this.time * 6) * 1.5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    const core = p.focus ? 4.2 : 2.8;
+    ctx.fillStyle = "rgba(255,220,120,0.75)";
+    ctx.beginPath();
+    ctx.moveTo(x - 2, y + 14);
+    ctx.lineTo(x + 2, y + 14);
+    ctx.lineTo(x, y + 14 + flame * 0.7);
+    ctx.closePath();
+    ctx.fill();
+
+    // fuselagem
+    ctx.fillStyle = "#2a3418";
+    ctx.beginPath();
+    ctx.moveTo(x, y - 18);
+    ctx.lineTo(x + 7, y - 4);
+    ctx.lineTo(x + 6, y + 12);
+    ctx.lineTo(x, y + 16);
+    ctx.lineTo(x - 6, y + 12);
+    ctx.lineTo(x - 7, y - 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#8a9a48";
+    ctx.beginPath();
+    ctx.moveTo(x, y - 16);
+    ctx.lineTo(x + 5, y - 4);
+    ctx.lineTo(x + 4, y + 10);
+    ctx.lineTo(x, y + 13);
+    ctx.lineTo(x - 4, y + 10);
+    ctx.lineTo(x - 5, y - 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // asas
+    ctx.fillStyle = "#4a5c28";
+    ctx.fillRect(x - 16, y - 2, 32, 8);
+    ctx.fillStyle = "#d4c24a";
+    ctx.fillRect(x - 16, y - 2, 6, 8);
+    ctx.fillRect(x + 10, y - 2, 6, 8);
+    ctx.fillStyle = "#1a2010";
+    ctx.fillRect(x - 10, y + 1, 20, 1.5);
+
+    // marca
+    ctx.fillStyle = "#b33a2a";
+    ctx.fillRect(x - 2, y + 3, 4, 5);
+    ctx.fillStyle = "#ffe08a";
+    ctx.fillRect(x - 1, y + 4, 2, 3);
+
+    // cockpit
+    ctx.fillStyle = "#7ec8e8";
+    ctx.beginPath();
+    ctx.arc(x, y - 8, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#d8f0ff";
+    ctx.beginPath();
+    ctx.arc(x - 0.5, y - 9, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // cauda
+    ctx.fillStyle = "#3a4a20";
+    ctx.fillRect(x - 1.5, y + 12, 3, 6);
+    ctx.fillStyle = "#d4c24a";
+    ctx.fillRect(x - 7, y + 12, 14, 3);
+
+    // outline
+    ctx.strokeStyle = "#0a1008";
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(x - 16, y - 2, 32, 8);
+
+    // hitbox core (sempre visível)
+    const core = p.focus ? 4.5 : 3.2;
     ctx.fillStyle = p.focus ? "#fff8e0" : "#ff3d6e";
     ctx.strokeStyle = "#140810";
     ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, core, 0, Math.PI * 2);
+    ctx.arc(x, y, core, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
     if (p.focus) {
-      ctx.strokeStyle = "rgba(255,244,180,0.85)";
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(255,244,180,0.9)";
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
       ctx.stroke();
     }
-    ctx.globalAlpha = 1;
+    if (p.shield > 0) {
+      ctx.strokeStyle = "rgba(120,200,255,0.85)";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(x, y, 18 + Math.sin(this.time * 6) * 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // hélice simples
+    try {
+      drawProp(ctx, x, y - 16, this.time, "rgba(240,240,220,0.7)");
+    } catch (_) {}
+
+    ctx.restore();
   }
 
   _enemyWash(key) {
@@ -478,7 +550,6 @@ export class Renderer {
 
   _enemies(ctx, game) {
     const wash = this._enemyWash(game.palette());
-    ctx.filter = "none";
     ctx.globalAlpha = 1;
     for (const e of game.enemies) {
       if (e.dead) continue;
@@ -530,7 +601,6 @@ export class Renderer {
         drawProp(ctx, e.x, e.y + spr.height / 2 - 4, this.time * 1.2 + e.phase, "rgba(200,200,180,0.35)");
       }
     }
-    ctx.filter = "none";
     ctx.globalAlpha = 1;
   }
 
