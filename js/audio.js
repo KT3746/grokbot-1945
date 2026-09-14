@@ -1,5 +1,6 @@
 /**
  * Áudio procedural premium (Web Audio) — sem samples com copyright.
+ * Mix mais cheio: pad + delay, groove em camadas, SFX com corpo.
  */
 import { STORAGE_MUTE } from "./version.js";
 
@@ -20,6 +21,7 @@ export class AudioSys {
     this._stageId = 0;
     this._palette = "tropic";
     this._comboHype = 0;
+    this._noisePool = null;
   }
 
   unlock() {
@@ -32,34 +34,56 @@ export class AudioSys {
     this.ctx = new AC();
 
     this.master = this.ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : 0.92;
+    this.master.gain.value = this.muted ? 0 : 1;
 
-    // compressor suave = sensação mais "mixada"/premium
     this.comp = this.ctx.createDynamicsCompressor();
-    this.comp.threshold.value = -18;
-    this.comp.knee.value = 18;
-    this.comp.ratio.value = 3.2;
-    this.comp.attack.value = 0.01;
-    this.comp.release.value = 0.22;
+    this.comp.threshold.value = -22;
+    this.comp.knee.value = 22;
+    this.comp.ratio.value = 3.8;
+    this.comp.attack.value = 0.008;
+    this.comp.release.value = 0.18;
     this.comp.connect(this.master);
     this.master.connect(this.ctx.destination);
 
     this.musicGain = this.ctx.createGain();
-    this.musicGain.gain.value = 0.38;
+    this.musicGain.gain.value = 0.46;
     this.musicGain.connect(this.comp);
 
     this.sfxGain = this.ctx.createGain();
-    this.sfxGain.gain.value = 0.92;
+    this.sfxGain.gain.value = 1;
     this.sfxGain.connect(this.comp);
 
+    // delay curto na música = sensação de sala / arcade
+    this._delay = this.ctx.createDelay(0.5);
+    this._delay.delayTime.value = 0.18;
+    this._delayFb = this.ctx.createGain();
+    this._delayFb.gain.value = 0.28;
+    this._delayWet = this.ctx.createGain();
+    this._delayWet.gain.value = 0.22;
+    this.musicGain.connect(this._delay);
+    this._delay.connect(this._delayFb);
+    this._delayFb.connect(this._delay);
+    this._delay.connect(this._delayWet);
+    this._delayWet.connect(this.comp);
+
+    this._makeNoisePool();
     this.unlocked = true;
     this._startBed();
+  }
+
+  _makeNoisePool() {
+    const ctx = this.ctx;
+    const n = ctx.sampleRate * 1.2;
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
+    this._noisePool = buf;
   }
 
   setMuted(m) {
     this.muted = m;
     localStorage.setItem(STORAGE_MUTE, m ? "1" : "0");
-    if (this.master) this.master.gain.value = m ? 0 : 0.92;
+    if (this.master) this.master.gain.value = m ? 0 : 1;
     if (this.ctx && this.ctx.state === "suspended" && !m) this.ctx.resume();
   }
 
@@ -73,29 +97,33 @@ export class AudioSys {
     if (this._pad && this._pad.f && this.ctx) {
       const t = this.ctx.currentTime;
       const base = this._paletteFilter();
-      this._pad.f.frequency.setTargetAtTime(v ? Math.max(base, 2600) : base, t, 0.4);
-      this._pad.drive.gain.setTargetAtTime(v ? 0.12 : 0.06, t, 0.4);
-      this._pad.sparkleG.gain.setTargetAtTime(v ? 0.034 : 0.014, t, 0.4);
+      try {
+        this._pad.f.frequency.setTargetAtTime(v ? Math.max(base, 2800) : base, t, 0.35);
+        this._pad.drive.gain.setTargetAtTime(v ? 0.14 : 0.075, t, 0.35);
+        this._pad.sparkleG.gain.setTargetAtTime(v ? 0.04 : 0.018, t, 0.35);
+        if (this._delayWet) this._delayWet.gain.setTargetAtTime(v ? 0.3 : 0.22, t, 0.4);
+      } catch (_) {}
     }
   }
 
   _paletteFilter() {
     const p = this._palette;
-    if (p === "storm") return 1600;
-    if (p === "fortress") return 900;
-    if (p === "bronze") return 1250;
-    if (p === "cloud") return 1400;
-    return 1100;
+    if (p === "tropic") return 1400;
+    if (p === "overcast") return 1000;
+    if (p === "dusk") return 1600;
+    if (p === "storm") return 2000;
+    if (p === "fortress") return 850;
+    return 1200;
   }
 
   _stageTempo() {
     const p = this._palette;
-    if (p === "tropic") return 0.52;
-    if (p === "overcast") return 0.44;
-    if (p === "dusk") return 0.38;
-    if (p === "storm") return 0.28;
-    if (p === "fortress") return 0.36;
-    return 0.44;
+    if (p === "tropic") return 0.48;
+    if (p === "overcast") return 0.42;
+    if (p === "dusk") return 0.36;
+    if (p === "storm") return 0.26;
+    if (p === "fortress") return 0.34;
+    return 0.42;
   }
 
   setStage(index, palette) {
@@ -103,15 +131,23 @@ export class AudioSys {
     this._palette = palette || "tropic";
     if (!this._pad || !this.ctx) return;
     const t = this.ctx.currentTime;
-    const bass = 48 + this._stageId * 4;
-    const mid = 98 + this._stageId * 8;
+    const bass = 46 + this._stageId * 5;
+    const mid = 92 + this._stageId * 10;
     try {
-      this._pad.bass.frequency.setTargetAtTime(bass, t, 0.5);
-      this._pad.sub.frequency.setTargetAtTime(bass * 0.5, t, 0.5);
-      this._pad.mid.frequency.setTargetAtTime(mid, t, 0.5);
-      this._pad.mid2.frequency.setTargetAtTime(mid * 1.5, t, 0.5);
+      this._pad.bass.frequency.setTargetAtTime(bass, t, 0.45);
+      this._pad.sub.frequency.setTargetAtTime(bass * 0.5, t, 0.45);
+      this._pad.mid.frequency.setTargetAtTime(mid, t, 0.45);
+      this._pad.mid2.frequency.setTargetAtTime(mid * 1.5, t, 0.45);
       if (!this._intense) {
-        this._pad.f.frequency.setTargetAtTime(this._paletteFilter(), t, 0.6);
+        this._pad.f.frequency.setTargetAtTime(this._paletteFilter(), t, 0.55);
+      }
+      // delay time por vibe
+      if (this._delay) {
+        const d =
+          this._palette === "storm" ? 0.12 :
+          this._palette === "tropic" ? 0.22 :
+          this._palette === "fortress" ? 0.15 : 0.18;
+        this._delay.delayTime.setTargetAtTime(d, t, 0.4);
       }
     } catch (_) {}
   }
@@ -122,8 +158,8 @@ export class AudioSys {
     if (this._beat <= 0) {
       this._groove();
       const tempo = this._stageTempo();
-      const hype = this._intense ? tempo * 0.72 : tempo;
-      this._beat = this._comboHype > 0 ? Math.min(hype, tempo * 0.65) : hype;
+      const hype = this._intense ? tempo * 0.7 : tempo;
+      this._beat = this._comboHype > 0 ? Math.min(hype, tempo * 0.62) : hype;
       if (this._comboHype > 0) this._comboHype -= 1;
     }
   }
@@ -139,56 +175,55 @@ export class AudioSys {
     sub.type = "sine";
     bass.frequency.value = 55;
     sub.frequency.value = 27.5;
-    bassG.gain.value = 0.09;
+    bassG.gain.value = 0.11;
     bass.connect(bassG);
     sub.connect(bassG);
 
     const mid = ctx.createOscillator();
     const mid2 = ctx.createOscillator();
+    const mid3 = ctx.createOscillator();
     const midG = ctx.createGain();
     const f = ctx.createBiquadFilter();
     mid.type = "sawtooth";
     mid2.type = "triangle";
+    mid3.type = "sine";
     mid.frequency.value = 110;
     mid2.frequency.value = 164.8;
+    mid3.frequency.value = 220.5;
     f.type = "lowpass";
-    f.frequency.value = 1100;
-    f.Q.value = 0.85;
-    midG.gain.value = 0.032;
+    f.frequency.value = 1200;
+    f.Q.value = 0.9;
+    midG.gain.value = 0.04;
     mid.connect(f);
     mid2.connect(f);
+    mid3.connect(f);
     f.connect(midG);
 
-    // shimmer / sparkle
     const sparkle = ctx.createOscillator();
     const sparkleG = ctx.createGain();
     const sf = ctx.createBiquadFilter();
     sparkle.type = "sine";
-    sparkle.frequency.value = 880;
+    sparkle.frequency.value = 987;
     sf.type = "highpass";
-    sf.frequency.value = 600;
-    sparkleG.gain.value = 0.014;
+    sf.frequency.value = 700;
+    sparkleG.gain.value = 0.018;
     sparkle.connect(sf);
     sf.connect(sparkleG);
 
-    const nLen = ctx.sampleRate * 2;
-    const buf = ctx.createBuffer(1, nLen, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < nLen; i++) data[i] = (Math.random() * 2 - 1) * 0.35;
     const noise = ctx.createBufferSource();
-    noise.buffer = buf;
+    noise.buffer = this._noisePool;
     noise.loop = true;
     const nf = ctx.createBiquadFilter();
     nf.type = "bandpass";
-    nf.frequency.value = 520;
-    nf.Q.value = 0.55;
+    nf.frequency.value = 480;
+    nf.Q.value = 0.6;
     const ng = ctx.createGain();
-    ng.gain.value = 0.02;
+    ng.gain.value = 0.028;
     noise.connect(nf);
     nf.connect(ng);
 
     const drive = ctx.createGain();
-    drive.gain.value = 0.06;
+    drive.gain.value = 0.075;
     bassG.connect(drive);
     midG.connect(drive);
     sparkleG.connect(drive);
@@ -199,9 +234,99 @@ export class AudioSys {
     sub.start(t);
     mid.start(t);
     mid2.start(t);
+    mid3.start(t);
     sparkle.start(t);
     noise.start(t);
-    this._pad = { bass, sub, mid, mid2, sparkle, noise, f, drive, sparkleG };
+    this._pad = { bass, sub, mid, mid2, mid3, sparkle, noise, f, drive, sparkleG, nf, ng };
+  }
+
+  _kick(t, pal, intense) {
+    const ctx = this.ctx;
+    const o = ctx.createOscillator();
+    const o2 = ctx.createOscillator();
+    const g = ctx.createGain();
+    const click = ctx.createGain();
+    o.type = "sine";
+    o2.type = pal === "fortress" ? "triangle" : "sine";
+    const kickF = pal === "tropic" ? 105 : pal === "storm" ? 155 : pal === "dusk" ? 125 : 115;
+    o.frequency.setValueAtTime(intense ? kickF + 50 : kickF, t);
+    o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+    o2.frequency.setValueAtTime((intense ? kickF + 50 : kickF) * 0.5, t);
+    o2.frequency.exponentialRampToValueAtTime(30, t + 0.16);
+    const kickV = intense ? 0.2 : pal === "storm" ? 0.17 : 0.15;
+    g.gain.setValueAtTime(kickV, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o.connect(g);
+    o2.connect(g);
+    g.connect(this.musicGain);
+    // click de ataque
+    const n = ctx.createBufferSource();
+    n.buffer = this._noisePool;
+    const bp = ctx.createBiquadFilter();
+    bp.type = "highpass";
+    bp.frequency.value = 2500;
+    click.gain.setValueAtTime(intense ? 0.06 : 0.04, t);
+    click.gain.exponentialRampToValueAtTime(0.0001, t + 0.025);
+    n.connect(bp);
+    bp.connect(click);
+    click.connect(this.musicGain);
+    o.start(t);
+    o2.start(t);
+    n.start(t);
+    o.stop(t + 0.2);
+    o2.stop(t + 0.2);
+    n.stop(t + 0.03);
+  }
+
+  _snare(t, pal, intense) {
+    const ctx = this.ctx;
+    const body = ctx.createOscillator();
+    const bg = ctx.createGain();
+    body.type = "triangle";
+    body.frequency.setValueAtTime(pal === "dusk" ? 220 : 180, t);
+    body.frequency.exponentialRampToValueAtTime(90, t + 0.08);
+    bg.gain.setValueAtTime(intense ? 0.07 : 0.045, t);
+    bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+    body.connect(bg);
+    bg.connect(this.musicGain);
+    body.start(t);
+    body.stop(t + 0.12);
+
+    const src = ctx.createBufferSource();
+    src.buffer = this._noisePool;
+    const f = ctx.createBiquadFilter();
+    f.type = "bandpass";
+    f.frequency.value = pal === "fortress" ? 2200 : 3500;
+    f.Q.value = 0.8;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(intense ? 0.09 : 0.055, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    src.connect(f);
+    f.connect(g);
+    g.connect(this.musicGain);
+    src.start(t);
+    src.stop(t + 0.14);
+  }
+
+  _hat(t, pal, intense) {
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = this._noisePool;
+    const f = ctx.createBiquadFilter();
+    f.type = "highpass";
+    f.frequency.value = pal === "tropic" ? 9000 : pal === "fortress" ? 5000 : 7500;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(intense ? 0.045 : 0.028, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+    src.connect(f);
+    f.connect(g);
+    g.connect(this.musicGain);
+    src.start(t);
+    src.stop(t + 0.04);
+    // ping metálico leve
+    if (pal === "fortress" || intense) {
+      this.tone(pal === "fortress" ? 2400 : 3200, "sine", 0.02, intense ? 0.025 : 0.015, -400);
+    }
   }
 
   _groove() {
@@ -211,75 +336,72 @@ export class AudioSys {
     const stage = this._stageId | 0;
     const pal = this._palette || "tropic";
 
-    // kick — timbre por fase
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = pal === "fortress" ? "square" : pal === "storm" ? "sawtooth" : "sine";
-    const kickF = pal === "tropic" ? 110 : pal === "storm" ? 180 : pal === "dusk" ? 140 : 122;
-    o.frequency.setValueAtTime(intense ? kickF + 40 : kickF, t);
-    o.frequency.exponentialRampToValueAtTime(pal === "fortress" ? 48 : 38, t + 0.12);
-    const kickV = pal === "storm" ? 0.14 : pal === "fortress" ? 0.13 : 0.11;
-    g.gain.setValueAtTime(intense ? kickV + 0.05 : kickV, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
-    o.connect(g);
-    g.connect(this.musicGain);
-    o.start(t);
-    o.stop(t + 0.15);
-
+    this._kick(t, pal, intense);
     this._step++;
-    // snare / clap — mais denso na tempestade
-    const snareEvery = pal === "storm" ? 1 : 2;
-    if (this._step % snareEvery === 0) {
-      this.noise(0.045, intense ? 0.055 : pal === "overcast" ? 0.04 : 0.032, pal === "dusk" ? 2800 : 4200);
-      this.tone(pal === "dusk" ? 220 : 180, "triangle", 0.04, 0.03, -40);
-    }
-    // hi-hat — tropical aberto, fortaleza metálica
-    const hatF = pal === "tropic" ? 11000 : pal === "fortress" ? 6000 : 9000;
-    this.noise(0.015, intense ? 0.03 : pal === "storm" ? 0.028 : 0.018, hatF);
 
-    // melodic pluck — escala + onda por estágio
-    const melEvery = pal === "tropic" ? 2 : pal === "storm" ? 1 : 2;
+    const snareEvery = pal === "storm" ? 1 : 2;
+    if (this._step % snareEvery === 0) this._snare(t, pal, intense);
+    this._hat(t, pal, intense);
+    if (this._step % 2 === 1) this._hat(t + 0.08, pal, intense);
+
+    const melEvery = pal === "storm" ? 1 : 2;
     if (this._step % melEvery === 0) {
       const scales = [
-        [294, 349, 392, 440, 523],       // tropic major alegre
-        [277, 330, 370, 415, 494],       // overcast menor
-        [311, 370, 415, 466, 554],       // dusk brilhante
-        [262, 311, 349, 415, 494],       // storm tenso
-        [233, 294, 349, 415, 466],       // fortress grave
+        [262, 330, 392, 523, 392, 330], // tropic
+        [247, 294, 370, 440, 370, 294], // overcast
+        [277, 349, 415, 554, 415, 349], // dusk
+        [233, 277, 349, 466, 349, 277], // storm
+        [220, 262, 330, 415, 330, 262], // fortress
       ];
-      const hypeScale = [392, 466, 523, 622, 698, 784];
+      const hypeScale = [392, 494, 587, 698, 880, 698];
       const scale = intense ? hypeScale : scales[stage % scales.length];
       const f0 = scale[this._bassStep % scale.length];
       this._bassStep++;
+
       const pl = ctx.createOscillator();
       const pl2 = ctx.createOscillator();
+      const pl3 = ctx.createOscillator();
       const pg = ctx.createGain();
       const pf = ctx.createBiquadFilter();
       pl.type = pal === "fortress" ? "square" : pal === "storm" ? "sawtooth" : "triangle";
       pl2.type = "sine";
+      pl3.type = "sine";
       pl.frequency.value = f0;
-      pl2.frequency.value = f0 * (pal === "dusk" ? 1.5 : 2.01);
+      pl2.frequency.value = f0 * (pal === "dusk" ? 1.5 : 2.005);
+      pl3.frequency.value = f0 * 0.5;
       pf.type = "lowpass";
-      pf.frequency.setValueAtTime(intense ? 4200 : pal === "tropic" ? 3600 : 3000, t);
-      pf.frequency.exponentialRampToValueAtTime(650, t + 0.22);
-      pg.gain.setValueAtTime(intense ? 0.07 : 0.058, t);
-      pg.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
+      pf.Q.value = 1.1;
+      pf.frequency.setValueAtTime(intense ? 4800 : pal === "tropic" ? 3800 : 3200, t);
+      pf.frequency.exponentialRampToValueAtTime(700, t + 0.28);
+      const vol = intense ? 0.085 : 0.065;
+      pg.gain.setValueAtTime(vol, t);
+      pg.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
       pl.connect(pf);
       pl2.connect(pf);
+      pl3.connect(pf);
       pf.connect(pg);
       pg.connect(this.musicGain);
       pl.start(t);
       pl2.start(t);
-      pl.stop(t + 0.26);
-      pl2.stop(t + 0.26);
+      pl3.start(t);
+      pl.stop(t + 0.32);
+      pl2.stop(t + 0.32);
+      pl3.stop(t + 0.32);
     }
 
-    // offbeat bass stab
-    if (this._step % (pal === "fortress" ? 2 : 4) === 0) {
-      this.tone(intense ? 98 : pal === "fortress" ? 70 : 82, "sine", 0.12, intense ? 0.08 : 0.055, -20);
+    // stab de acorde a cada 4
+    if (this._step % 4 === 0) {
+      const root = intense ? 98 : pal === "fortress" ? 65 : 82;
+      this.tone(root, "sine", 0.16, intense ? 0.09 : 0.06, -12);
+      this.tone(root * 1.5, "triangle", 0.12, 0.035, -8);
+      this.tone(root * 2, "sine", 0.1, 0.025);
     }
 
-    this.noise(0.018, intense ? 0.03 : 0.016, pal === "storm" ? 12000 : 8500);
+    // fill ocasional
+    if (this._step % 16 === 14) {
+      this._snare(t + 0.05, pal, true);
+      this._hat(t + 0.1, pal, true);
+    }
   }
 
   _env(g, t, a, d, vol) {
@@ -298,44 +420,43 @@ export class AudioSys {
     const f = ctx.createBiquadFilter();
     o.type = type;
     o2.type = "sine";
-    o.frequency.setValueAtTime(freq, ctx.currentTime);
-    o2.frequency.setValueAtTime(freq * 2.01, ctx.currentTime);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(Math.max(20, freq), t0);
+    o2.frequency.setValueAtTime(Math.max(20, freq * 2.01), t0);
     if (slide) {
       const end = Math.max(40, freq + slide);
-      o.frequency.exponentialRampToValueAtTime(end, ctx.currentTime + dur);
-      o2.frequency.exponentialRampToValueAtTime(Math.max(40, end * 2), ctx.currentTime + dur);
+      o.frequency.exponentialRampToValueAtTime(end, t0 + dur);
+      o2.frequency.exponentialRampToValueAtTime(Math.max(40, end * 2), t0 + dur);
     }
     f.type = "lowpass";
-    f.frequency.value = Math.min(9000, freq * 5);
-    this._env(g, ctx.currentTime, 0.006, dur, vol);
+    f.frequency.value = Math.min(10000, Math.max(200, freq * 6));
+    this._env(g, t0, 0.005, dur, vol);
     o.connect(f);
     o2.connect(f);
     f.connect(g);
     g.connect(this.sfxGain);
-    o.start();
-    o2.start();
-    o.stop(ctx.currentTime + dur + 0.06);
-    o2.stop(ctx.currentTime + dur + 0.06);
+    o.start(t0);
+    o2.start(t0);
+    o.stop(t0 + dur + 0.05);
+    o2.stop(t0 + dur + 0.05);
   }
 
-  noise(dur, vol = 0.1, filterFreq = 1400) {
+  noise(dur, vol = 0.1, filterFreq = 1400, type = "lowpass") {
     if (!this.unlocked || this.muted) return;
     const ctx = this.ctx;
-    const n = Math.max(1, (ctx.sampleRate * dur) | 0);
-    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
-    src.buffer = buf;
+    src.buffer = this._noisePool;
     const f = ctx.createBiquadFilter();
-    f.type = "lowpass";
+    f.type = type;
     f.frequency.value = filterFreq;
     const g = ctx.createGain();
-    this._env(g, ctx.currentTime, 0.002, dur, vol);
+    const t0 = ctx.currentTime;
+    this._env(g, t0, 0.002, dur, vol);
     src.connect(f);
     f.connect(g);
     g.connect(this.sfxGain);
-    src.start();
+    src.start(t0);
+    src.stop(t0 + dur + 0.02);
   }
 
   shoot() {
@@ -343,31 +464,27 @@ export class AudioSys {
     const ctx = this.ctx;
     const t = ctx.currentTime;
     const dest = this.sfxGain;
-    const jit = (Math.random() - 0.5) * 80;
+    const jit = (Math.random() - 0.5) * 100;
 
-    // Transient mecânico (click) — bandpass curto
+    // click mecânico
     {
-      const n = Math.max(1, (ctx.sampleRate * 0.018) | 0);
-      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
       const src = ctx.createBufferSource();
-      src.buffer = buf;
+      src.buffer = this._noisePool;
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
-      bp.frequency.value = 4200;
-      bp.Q.value = 1.4;
+      bp.frequency.value = 4800 + jit * 0.2;
+      bp.Q.value = 1.6;
       const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.11, t + 0.0015);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.022);
+      g.gain.setValueAtTime(0.14, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
       src.connect(bp);
       bp.connect(g);
       g.connect(dest);
       src.start(t);
+      src.stop(t + 0.025);
     }
 
-    // Corpo do blaster — saw + triangle com pitch drop
+    // corpo blaster
     {
       const o = ctx.createOscillator();
       const o2 = ctx.createOscillator();
@@ -375,58 +492,52 @@ export class AudioSys {
       const g = ctx.createGain();
       o.type = "sawtooth";
       o2.type = "triangle";
-      o.frequency.setValueAtTime(1180 + jit, t);
-      o.frequency.exponentialRampToValueAtTime(220 + jit * 0.2, t + 0.05);
-      o2.frequency.setValueAtTime(2360 + jit * 2, t);
-      o2.frequency.exponentialRampToValueAtTime(440 + jit * 0.3, t + 0.045);
+      o.frequency.setValueAtTime(1280 + jit, t);
+      o.frequency.exponentialRampToValueAtTime(200 + jit * 0.15, t + 0.055);
+      o2.frequency.setValueAtTime(2560 + jit * 2, t);
+      o2.frequency.exponentialRampToValueAtTime(400, t + 0.05);
       f.type = "lowpass";
-      f.frequency.setValueAtTime(5200, t);
-      f.frequency.exponentialRampToValueAtTime(900, t + 0.06);
-      f.Q.value = 0.7;
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.078, t + 0.003);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      f.Q.value = 0.85;
+      f.frequency.setValueAtTime(6200, t);
+      f.frequency.exponentialRampToValueAtTime(800, t + 0.07);
+      g.gain.setValueAtTime(0.1, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
       o.connect(f);
       o2.connect(f);
       f.connect(g);
       g.connect(dest);
       o.start(t);
       o2.start(t);
-      o.stop(t + 0.09);
-      o2.stop(t + 0.09);
+      o.stop(t + 0.1);
+      o2.stop(t + 0.1);
     }
 
-    // Whoosh de ar (highpass curto)
+    // whoosh
     {
-      const n = Math.max(1, (ctx.sampleRate * 0.035) | 0);
-      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
       const src = ctx.createBufferSource();
-      src.buffer = buf;
+      src.buffer = this._noisePool;
       const hp = ctx.createBiquadFilter();
       hp.type = "highpass";
-      hp.frequency.value = 2800;
+      hp.frequency.value = 3000;
       const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.045, t + 0.002);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+      g.gain.setValueAtTime(0.055, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
       src.connect(hp);
       hp.connect(g);
       g.connect(dest);
       src.start(t);
+      src.stop(t + 0.05);
     }
 
-    // Peso baixo (sub tick)
+    // sub tick
     {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
       o.type = "sine";
-      o.frequency.setValueAtTime(180, t);
-      o.frequency.exponentialRampToValueAtTime(70, t + 0.04);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.055, t + 0.002);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+      o.frequency.setValueAtTime(190, t);
+      o.frequency.exponentialRampToValueAtTime(65, t + 0.045);
+      g.gain.setValueAtTime(0.07, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
       o.connect(g);
       g.connect(dest);
       o.start(t);
@@ -435,88 +546,129 @@ export class AudioSys {
   }
 
   enemyShot() {
-    this.tone(280, "sawtooth", 0.055, 0.042, -90);
-    this.tone(420, "triangle", 0.04, 0.025, -160);
-    this.noise(0.03, 0.022, 2400);
+    this.tone(300, "sawtooth", 0.06, 0.05, -110);
+    this.tone(460, "triangle", 0.045, 0.03, -180);
+    this.noise(0.035, 0.028, 2600);
   }
 
   explosion() {
-    this.noise(0.26, 0.24, 1000);
-    this.noise(0.14, 0.13, 3800);
-    this.tone(64, "sine", 0.28, 0.16, -22);
-    this.tone(130, "sawtooth", 0.14, 0.075, -55);
-    this.tone(240, "triangle", 0.09, 0.045, -90);
-    this.tone(90, "sine", 0.18, 0.06, -30);
+    if (!this.unlocked || this.muted) return;
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    // rumble
+    {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(70, t);
+      o.frequency.exponentialRampToValueAtTime(28, t + 0.35);
+      g.gain.setValueAtTime(0.22, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+      o.connect(g);
+      g.connect(this.sfxGain);
+      o.start(t);
+      o.stop(t + 0.42);
+    }
+    this.noise(0.32, 0.28, 900);
+    this.noise(0.18, 0.16, 2800, "bandpass");
+    this.noise(0.1, 0.1, 5500, "highpass");
+    this.tone(55, "sine", 0.32, 0.14, -18);
+    this.tone(120, "sawtooth", 0.16, 0.09, -60);
+    this.tone(210, "triangle", 0.1, 0.05, -100);
   }
 
   bigBoom() {
-    this.noise(0.6, 0.34, 700);
-    this.noise(0.4, 0.2, 2000);
-    this.tone(44, "sine", 0.7, 0.22, -10);
-    this.tone(100, "sawtooth", 0.4, 0.12, -45);
-    this.tone(210, "triangle", 0.22, 0.07, -80);
+    if (!this.unlocked || this.muted) return;
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(55, t);
+      o.frequency.exponentialRampToValueAtTime(22, t + 0.7);
+      g.gain.setValueAtTime(0.32, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
+      o.connect(g);
+      g.connect(this.sfxGain);
+      o.start(t);
+      o.stop(t + 0.8);
+    }
+    this.noise(0.65, 0.38, 650);
+    this.noise(0.45, 0.22, 1800, "bandpass");
+    this.noise(0.25, 0.14, 4200, "highpass");
+    this.tone(40, "sine", 0.75, 0.24, -8);
+    this.tone(90, "sawtooth", 0.4, 0.12, -40);
+    this.tone(180, "triangle", 0.25, 0.07, -70);
   }
 
   hit() {
-    this.tone(150, "sawtooth", 0.09, 0.12, -45);
-    this.noise(0.06, 0.13, 1000);
+    this.tone(160, "sawtooth", 0.08, 0.13, -50);
+    this.noise(0.055, 0.14, 1200);
+    this.tone(320, "triangle", 0.04, 0.05, -80);
   }
 
   hurt() {
-    this.tone(240, "sawtooth", 0.22, 0.15, -170);
-    this.tone(170, "square", 0.16, 0.07, -95);
-    this.noise(0.15, 0.15, 750);
+    this.tone(260, "sawtooth", 0.24, 0.16, -180);
+    this.tone(180, "square", 0.18, 0.08, -100);
+    this.noise(0.16, 0.16, 700);
+    this.tone(90, "sine", 0.2, 0.08, -30);
   }
 
   combo(n = 4) {
     if (!this.unlocked || this.muted) return;
-    this._comboHype = Math.min(12, 4 + (n / 2) | 0);
-    const base = 520 + Math.min(8, n) * 40;
-    this.tone(base, "triangle", 0.06, 0.09);
-    setTimeout(() => this.tone(base * 1.25, "sine", 0.07, 0.08), 45);
-    setTimeout(() => this.tone(base * 1.5, "triangle", 0.1, 0.07), 95);
-    if (n >= 8) setTimeout(() => this.tone(base * 2, "sine", 0.14, 0.06), 150);
+    this._comboHype = Math.min(14, 4 + (n / 2) | 0);
+    const base = 540 + Math.min(10, n) * 36;
+    this.tone(base, "triangle", 0.07, 0.1);
+    setTimeout(() => this.tone(base * 1.25, "sine", 0.08, 0.09), 40);
+    setTimeout(() => this.tone(base * 1.5, "triangle", 0.11, 0.08), 90);
+    if (n >= 8) setTimeout(() => this.tone(base * 2, "sine", 0.16, 0.07), 140);
+    if (n >= 12) setTimeout(() => this.tone(base * 2.5, "triangle", 0.2, 0.06), 200);
   }
 
   pickup() {
-    this.tone(659, "sine", 0.05, 0.1);
-    this.tone(988, "triangle", 0.04, 0.05);
-    setTimeout(() => this.tone(880, "triangle", 0.07, 0.09), 35);
-    setTimeout(() => this.tone(1174, "sine", 0.12, 0.085), 80);
-    setTimeout(() => this.tone(1480, "sine", 0.1, 0.05), 130);
+    this.tone(660, "sine", 0.05, 0.11);
+    this.tone(990, "triangle", 0.04, 0.06);
+    setTimeout(() => this.tone(880, "triangle", 0.07, 0.1), 30);
+    setTimeout(() => this.tone(1175, "sine", 0.12, 0.09), 75);
+    setTimeout(() => this.tone(1480, "sine", 0.12, 0.06), 125);
+    setTimeout(() => this.noise(0.04, 0.03, 6000, "highpass"), 20);
   }
 
   ui() {
-    this.tone(780, "triangle", 0.045, 0.06);
-    this.tone(1040, "sine", 0.035, 0.03);
+    this.tone(820, "triangle", 0.05, 0.07);
+    this.tone(1100, "sine", 0.04, 0.035);
   }
 
   warning() {
-    this.tone(520, "sawtooth", 0.09, 0.09, -40);
-    this.noise(0.08, 0.05, 2400);
-    setTimeout(() => this.tone(390, "square", 0.14, 0.08, -30), 90);
-    setTimeout(() => this.tone(310, "sawtooth", 0.16, 0.07), 180);
+    this.tone(540, "sawtooth", 0.1, 0.1, -45);
+    this.noise(0.09, 0.06, 2600);
+    setTimeout(() => this.tone(400, "square", 0.14, 0.09, -35), 85);
+    setTimeout(() => this.tone(320, "sawtooth", 0.16, 0.08), 170);
   }
 
   stage() {
-    const root = 280 + (this._stageId % 5) * 28;
-    this.tone(root, "triangle", 0.12, 0.1);
-    setTimeout(() => this.tone(root * 1.25, "triangle", 0.12, 0.095), 75);
-    setTimeout(() => this.tone(root * 1.5, "sine", 0.18, 0.1), 150);
-    setTimeout(() => this.tone(root * 2, "sine", 0.28, 0.08), 240);
-    this.noise(0.06, 0.03, 1800);
+    const root = 294 + (this._stageId % 5) * 30;
+    this.tone(root, "triangle", 0.14, 0.11);
+    setTimeout(() => this.tone(root * 1.25, "triangle", 0.14, 0.1), 70);
+    setTimeout(() => this.tone(root * 1.5, "sine", 0.2, 0.11), 140);
+    setTimeout(() => this.tone(root * 2, "sine", 0.3, 0.09), 230);
+    setTimeout(() => this.tone(root * 2.5, "triangle", 0.22, 0.05), 320);
+    this.noise(0.07, 0.035, 2000);
   }
 
   gameover() {
-    this.tone(208, "sawtooth", 0.32, 0.13, -40);
-    setTimeout(() => this.tone(155, "triangle", 0.42, 0.11, -30), 150);
-    setTimeout(() => this.tone(103, "sine", 0.58, 0.11), 300);
+    this.tone(220, "sawtooth", 0.35, 0.14, -45);
+    setTimeout(() => this.tone(165, "triangle", 0.45, 0.12, -35), 140);
+    setTimeout(() => this.tone(110, "sine", 0.6, 0.12), 280);
+    setTimeout(() => this.noise(0.4, 0.08, 600), 100);
   }
 
   extraLife() {
-    this.tone(466, "sine", 0.08, 0.1);
-    setTimeout(() => this.tone(587, "sine", 0.1, 0.1), 65);
-    setTimeout(() => this.tone(698, "triangle", 0.12, 0.1), 130);
-    setTimeout(() => this.tone(932, "sine", 0.18, 0.09), 210);
+    this.tone(466, "sine", 0.09, 0.11);
+    setTimeout(() => this.tone(587, "sine", 0.1, 0.11), 60);
+    setTimeout(() => this.tone(698, "triangle", 0.12, 0.11), 120);
+    setTimeout(() => this.tone(932, "sine", 0.2, 0.1), 200);
+    setTimeout(() => this.tone(1175, "triangle", 0.18, 0.07), 280);
   }
 }
