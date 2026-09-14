@@ -606,20 +606,27 @@ export class Renderer {
 
   _bullets(ctx, game) {
     for (const b of game.pBullets) {
-      const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 8);
-      glow.addColorStop(0, "rgba(255,250,200,0.9)");
-      glow.addColorStop(0.5, "rgba(255,200,80,0.35)");
+      // rastro
+      ctx.strokeStyle = "rgba(255,200,80,0.35)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y + 10);
+      ctx.lineTo(b.x - b.vx * 0.02, b.y - b.vy * 0.02);
+      ctx.stroke();
+      const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 9);
+      glow.addColorStop(0, "rgba(255,250,200,0.95)");
+      glow.addColorStop(0.5, "rgba(255,200,80,0.4)");
       glow.addColorStop(1, "rgba(255,160,40,0)");
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(b.x, b.y, 7, 0, Math.PI * 2);
+      ctx.arc(b.x, b.y, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#fff8d0";
       ctx.beginPath();
-      ctx.ellipse(b.x, b.y, 2.4, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(b.x, b.y, 2.6, 7, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#ffe08a";
-      ctx.fillRect(b.x - 1.1, b.y - 1, 2.2, 8);
+      ctx.fillRect(b.x - 1.2, b.y - 1, 2.4, 9);
     }
     const key = game.palette();
     const bc =
