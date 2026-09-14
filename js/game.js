@@ -250,9 +250,9 @@ export class Game {
     const p = this.player;
     const n = p.spreadT > 0 ? Math.max(p.spread, 3) : p.spread;
     const shots = n >= 5 ? 5 : n >= 3 ? 3 : 1;
-    const speed = 470;
+    const speed = 500;
     this.fx.muzzle(p.x, p.y - 18);
-    p.y += 1.1;
+    p.y += 1.6;
     if (shots === 1) this._pbullet(p.x, p.y - 18, 0, -speed);
     else if (shots === 3) {
       this._pbullet(p.x, p.y - 18, 0, -speed);
@@ -278,7 +278,8 @@ export class Game {
     this.bombs--;
     this.bombCd = BOMB_COOLDOWN;
     this.audio.bigBoom();
-    this.fx.boom(this.player.x, this.player.y, 28, "#9ad4ff");
+    this.fx.boom(this.player.x, this.player.y, 36, "#9ad4ff");
+    this.fx.boom(this.player.x, this.player.y - 20, 14, "#ffe08a");
     this.fx.shake = 7;
     this.eBullets.length = 0;
     for (const e of this.enemies) {
@@ -696,9 +697,9 @@ export class Game {
         const dx = p.x - u.x;
         const dy = p.y - u.y;
         const d2 = dx * dx + dy * dy;
-        if (d2 < 95 * 95) {
+        if (d2 < 110 * 110) {
           const d = Math.sqrt(d2) || 1;
-          const pull = d2 < 50 * 50 ? 220 : 120;
+          const pull = d2 < 55 * 55 ? 280 : 160;
           u.x += (dx / d) * pull * dt;
           u.y += (dy / d) * pull * dt;
         }
@@ -763,7 +764,7 @@ export class Game {
   _kill(e, fromBomb) {
     e.dead = true;
     if (!e.boss) {
-      this.fx.boom(e.x, e.y, 12, "#e8c070");
+      this.fx.boom(e.x, e.y, 18, "#e8c070");
       this.audio.explosion();
     }
     if (fromBomb) {
@@ -780,8 +781,8 @@ export class Game {
       }
       if (this.combo === 5 || this.combo === 10 || this.combo === 15 || this.combo === 20) {
         try { this.audio.combo(this.combo); } catch (_) {}
-        this.fx.flash = Math.max(this.fx.flash, 0.12);
-        this.fx.shake = Math.max(this.fx.shake, 3);
+        this.fx.flash = Math.max(this.fx.flash, 0.18);
+        this.fx.shake = Math.max(this.fx.shake, 4.5);
         this.fx.floatText(e.x, e.y - 40, this.combo >= 15 ? "INSANO!" : this.combo >= 10 ? "ÉPICO!" : "BOM!", "#ff6a4a");
       }
       // combo high: rajada curta de brinde
