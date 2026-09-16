@@ -31,6 +31,7 @@ import {
   BOMB_SCORE,
   BOMB_DAMAGE,
   BOMB_COOLDOWN,
+  BOMB_INVULN,
   EMPTY_FILL_SEC,
 } from "./core.js";
 import { STAGES } from "./stages.js";
@@ -177,6 +178,8 @@ export class Game {
 
     const p = this.player;
     this.bombCd = Math.max(0, this.bombCd - dt);
+    this.bombShieldT = Math.max(0, (this.bombShieldT || 0) - dt);
+    if (this.bombShieldT > 0) this.eBullets.length = 0;
     if (p.alive) {
       p.focus = !!input.focusHeld;
       const spd = moveSpeed(p.focus);
@@ -187,7 +190,12 @@ export class Game {
           matchMedia("(max-width: 720px), (pointer: coarse)").matches);
       const yMax = touchUI ? H - 150 : H - 28;
       if (input.aimActive) {
-        // arraste relativo amplificado — responde na hora
+        // finger-follow absoluto (suave) + delta relativo — toque e arraste funcionam
+        if (input.aimAbsOn && input.aimAbsX != null) {
+          const k = Math.min(1, 14 * dt);
+          p.x = clamp(p.x + (input.aimAbsX - p.x) * k, 16, W - 16);
+          p.y = clamp(p.y + (input.aimAbsY - p.y) * k, 40, yMax);
+        }
         p.x = clamp(p.x + (input.aimDX || 0), 16, W - 16);
         p.y = clamp(p.y + (input.aimDY || 0), 40, yMax);
         input.aimDX = 0;
@@ -280,8 +288,13 @@ export class Game {
     this.audio.bigBoom();
     this.fx.boom(this.player.x, this.player.y, 36, "#9ad4ff");
     this.fx.boom(this.player.x, this.player.y - 20, 14, "#ffe08a");
-    this.fx.shake = 7;
+    this.fx.shake = 8;
+    this.fx.flash = Math.max(this.fx.flash, 0.28);
+    this.fx.floatText(this.player.x, this.player.y - 40, "BOMBA!", "#9ad4ff");
+    // limpa balas + i-frames pra não perder vida no mesmo instante
     this.eBullets.length = 0;
+    this.bombShieldT = 0.55;
+    this.player.invuln = Math.max(this.player.invuln, BOMB_INVULN);
     for (const e of this.enemies) {
       if (e.dead) continue;
       e.hp -= BOMB_DAMAGE;
@@ -598,7 +611,8 @@ export class Game {
   _bossAttack(e) {
     const p = this.player;
     const rage = e.hp / e.maxHp < 0.5;
-    const spd = 120 + this.loop * 18 + this.stageIndex * 6 + (rage ? 16 : 0);
+    let spd = 120 + this.loop * 18 + this.stageIndex * 6 + (rage ? 16 : 0);
+    if (this.loop === 0 && this.stageIndex === 0) spd *= 0.82;
     if (e.attack === "spread") {
       for (let i = -5; i <= 5; i++) {
         this._ebullet(e.x, e.y + 16, i * 34, spd);
@@ -844,6 +858,8 @@ export class Game {
     this.audio.hurt();
     this.fx.playerHurt();
     this.fx.boom(p.x, p.y, 22, "#e85d4c");
+    this.fx.flash = Math.max(this.fx.flash, 0.32);
+    this.fx.floatText(p.x, p.y - 28, "HIT!", "#ff6a4a");
     p.spread = 1;
     p.spreadT = 0;
     p.rapidT = 0;
