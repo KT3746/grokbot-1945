@@ -18,9 +18,12 @@ export class Input {
     this.aimFresh = false;
     this.aimDX = 0;
     this.aimDY = 0;
+    this.aimAbsX = null;
+    this.aimAbsY = null;
+    this.aimAbsOn = false;
     this._aimLast = null;
     /** >1 = dedo anda pouco, avião anda muito */
-    this.aimSensitivity = 2.1;
+    this.aimSensitivity = 2.4;
 
     this._keys = new Set();
     this._stick = { active: false, x: 0, y: 0, id: null };
@@ -85,10 +88,23 @@ export class Input {
   }
 
   _setAimFromEvent(e, fresh) {
-    const p = this._canvasFromClient(e.clientX, e.clientY);
-    if (!p) return;
-    this.aimActive = true;
     this.touchEnabled = true;
+    this.aimActive = true;
+    const canvas = document.getElementById("game");
+    let cx = e.clientX;
+    let cy = e.clientY;
+    if (canvas) {
+      const r = canvas.getBoundingClientRect();
+      const sx = (canvas.width || 360) / Math.max(1, r.width);
+      const sy = (canvas.height || 640) / Math.max(1, r.height);
+      cx = (e.clientX - r.left) * sx;
+      cy = (e.clientY - r.top) * sy;
+      // alvo um pouco acima do dedo pra não tapar o avião
+      this.aimAbsX = cx;
+      this.aimAbsY = cy - 48;
+      this.aimAbsOn = true;
+    }
+    const p = { x: e.clientX, y: e.clientY };
     if (fresh || !this._aimLast) {
       this._aimLast = { x: p.x, y: p.y };
       this.aimDX = 0;
@@ -96,7 +112,7 @@ export class Input {
       this.aimFresh = !!fresh;
       return;
     }
-    const s = this.aimSensitivity || 2.1;
+    const s = this.aimSensitivity || 2.4;
     this.aimDX += (p.x - this._aimLast.x) * s;
     this.aimDY += (p.y - this._aimLast.y) * s;
     this._aimLast = { x: p.x, y: p.y };
@@ -112,6 +128,9 @@ export class Input {
     this.aimFresh = false;
     this.aimDX = 0;
     this.aimDY = 0;
+    this.aimAbsX = null;
+    this.aimAbsY = null;
+    this.aimAbsOn = false;
     this._aimLast = null;
   }
 
