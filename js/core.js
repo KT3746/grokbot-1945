@@ -18,7 +18,7 @@ export const ENEMY_BULLET_R = 7;
 export const BOMB_SCORE = 20;
 export const BOMB_DAMAGE = 12;
 export const BOMB_COOLDOWN = 1.05;
-export const EMPTY_FILL_SEC = 3.2;
+export const EMPTY_FILL_SEC = 2.4;
 export const EXTRA_LIFE_AT = [20000, 50000, 100000, 200000];
 
 export function moveSpeed(focus) {
