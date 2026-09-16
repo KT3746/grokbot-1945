@@ -577,6 +577,15 @@ button.linkish {
     opacity: 0.92;
     margin-bottom: 8px;
   }
+
+  #btn-focus {
+    width: 56px;
+    height: 34px;
+    font: 800 11px/1 Barlow, sans-serif;
+    opacity: 0.92;
+    margin-bottom: 4px;
+  }
+
   .desk-hint {
     display: none;
   }
