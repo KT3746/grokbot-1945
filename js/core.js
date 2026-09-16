@@ -8,16 +8,17 @@ export const FOCUS_SPEED_MUL = 0.42;
 export const PLAYER_HIT_R = 7;
 export const PLAYER_FIRE = 0.13;
 export const PLAYER_FIRE_RAPID = 0.065;
-export const INVULN_TIME = 2.05;
+export const INVULN_TIME = 2.2;
 export const COMBO_WINDOW = 1.55;
 export const START_LIVES = 3;
 export const START_BOMBS = 2;
 export const MAX_SPREAD = 5;
 export const MAX_BOMBS = 9;
-export const ENEMY_BULLET_R = 7;
+export const ENEMY_BULLET_R = 6;
 export const BOMB_SCORE = 20;
 export const BOMB_DAMAGE = 12;
-export const BOMB_COOLDOWN = 1.05;
+export const BOMB_COOLDOWN = 0.95;
+export const BOMB_INVULN = 1.35;
 export const EMPTY_FILL_SEC = 2.4;
 export const EXTRA_LIFE_AT = [20000, 50000, 100000, 200000];
 
@@ -28,9 +29,10 @@ export function moveSpeed(focus) {
 /** Multiplicador do intervalo entre tiros inimigos (>1 = atira mais devagar). */
 export function fireIntervalScale(stageIndex, loop, runT) {
   let s = 1;
-  if (loop === 0 && stageIndex === 0) s *= 2.2;
-  if (loop === 0 && runT < 90) s *= 1.4;
-  if (loop === 0 && runT < 50) s *= 1.2;
+  if (loop === 0 && stageIndex === 0) s *= 2.6;
+  if (loop === 0 && stageIndex <= 1) s *= 1.25;
+  if (loop === 0 && runT < 90) s *= 1.45;
+  if (loop === 0 && runT < 50) s *= 1.25;
   return s;
 }
 
