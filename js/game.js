@@ -720,6 +720,7 @@ export class Game {
           e.flash = 0.12;
           hit = true;
           this.fx.impact(b.x, b.y);
+          try { this.audio.hit(); } catch (_) {}
           if (e.boss) this.hitStop = Math.max(this.hitStop, 0.05);
           else if (e.hp <= 0) this.hitStop = Math.max(this.hitStop, 0.035);
           if (e.hp <= 0) this._kill(e, false);
