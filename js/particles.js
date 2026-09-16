@@ -33,7 +33,7 @@ export class FX {
     this.bits.push({
       x, y, vx: 0, vy: 0,
       life: 0.28, max: 0.28, r: 22,
-      color: color + "55", kind: "glow",
+      color: "rgba(255,200,100,0.35)", kind: "glow",
     });
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
