@@ -583,9 +583,26 @@ export class Renderer {
         ctx.restore();
       }
       const sc = 1.35;
-      const dw = spr.width * sc;
-      const dh = spr.height * sc;
-      ctx.drawImage(spr, e.x - dw / 2, e.y - dh / 2, dw, dh);
+      let dw = 28, dh = 28;
+      try {
+        dw = spr.width * sc;
+        dh = spr.height * sc;
+        ctx.drawImage(spr, e.x - dw / 2, e.y - dh / 2, dw, dh);
+      } catch (_) {
+        // fallback vetorial (Chrome Android às vezes falha no drawImage de canvas)
+        dw = e.r * 2.2;
+        dh = e.r * 2.2;
+        ctx.fillStyle = e.kind === "bufalo" ? "#6a5030" : e.kind === "gaviao" ? "#8a3030" : "#c43a28";
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y + dh * 0.45);
+        ctx.lineTo(e.x + dw * 0.45, e.y - dh * 0.1);
+        ctx.lineTo(e.x, e.y - dh * 0.45);
+        ctx.lineTo(e.x - dw * 0.45, e.y - dh * 0.1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#c9a227";
+        ctx.fillRect(e.x - dw * 0.4, e.y - 2, dw * 0.8, 4);
+      }
       if (e.flash > 0) {
         ctx.globalAlpha = Math.min(0.85, e.flash * 4);
         ctx.fillStyle = "#fff8e0";
