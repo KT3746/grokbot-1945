@@ -1,5 +1,5 @@
 /** Fundo em camadas, entidades e suco visual. */
-import { W, H, PICKUP_LABEL } from "./core.js";
+import { W, H } from "./core.js";
 import { bakeSprites, drawProp } from "./sprites.js";
 
 const PAL = {
