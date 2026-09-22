@@ -579,11 +579,12 @@ button.linkish {
   }
 
   #btn-focus {
-    width: 56px;
-    height: 34px;
-    font: 800 11px/1 Barlow, sans-serif;
-    opacity: 0.92;
-    margin-bottom: 4px;
+    width: 64px;
+    height: 40px;
+    font: 800 12px/1 Barlow, sans-serif;
+    opacity: 0.95;
+    margin-bottom: 6px;
+    box-shadow: 0 0 12px #ffe08a44;
   }
 
   .desk-hint {
@@ -646,4 +647,16 @@ body.modal-open #touch {
 }
 body.modal-open #game {
   pointer-events: none !important;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .touch-actions button:active {
+    transform: none;
+  }
 }

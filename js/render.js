@@ -91,9 +91,11 @@ export class Renderer {
       ctx.fillRect(0, 0, W, H);
     }
     if (game.player.invuln > 0 && game.mode === "playing") {
-      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      const pulse = 0.35 + Math.sin(this.time * 14) * 0.2;
+      ctx.strokeStyle = `rgba(180,230,255,${pulse})`;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(game.player.x + shakeX, game.player.y + shakeY, 16, 0, Math.PI * 2);
+      ctx.arc(game.player.x + shakeX, game.player.y + shakeY, 17, 0, Math.PI * 2);
       ctx.stroke();
     }
   }
@@ -507,7 +509,7 @@ export class Renderer {
     ctx.strokeRect(x - 16, y - 2, 32, 8);
 
     // hitbox core (sempre visível)
-    const core = p.focus ? 4.5 : 3.2;
+    const core = p.focus ? 5.2 : 3.4;
     ctx.fillStyle = p.focus ? "#fff8e0" : "#ff3d6e";
     ctx.strokeStyle = "#140810";
     ctx.lineWidth = 1.6;

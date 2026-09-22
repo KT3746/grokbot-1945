@@ -5,6 +5,7 @@ import {
   W,
   H,
   PLAYER_HIT_R,
+  playerHitR,
   PLAYER_FIRE,
   PLAYER_FIRE_RAPID,
   INVULN_TIME,
@@ -600,8 +601,12 @@ export class Game {
       let poolAtk = e.attacks;
       if (frenzy) poolAtk = e.attacks;
       else if (rage) poolAtk = e.attacks.filter((a) => a !== "rain").concat(["fan", "burst"]);
+      // Albatroz (fase 1, loop 0): menos chuva/anel, mais fan/aimed legível
+      if (this.loop === 0 && this.stageIndex === 0 && !rage && !frenzy) {
+        poolAtk = e.attacks.filter((a) => a !== "rain" && a !== "ring").concat(["fan", "aimed", "spread"]);
+      }
       e.attack = poolAtk[(Math.random() * poolAtk.length) | 0];
-      e.telegraph = frenzy ? 0.48 : rage ? 0.58 : 0.72;
+      e.telegraph = frenzy ? 0.48 : rage ? 0.58 : (this.loop === 0 && this.stageIndex === 0 ? 0.95 : 0.72);
       e.atkT = frenzy
         ? 0.62
         : rage
@@ -619,8 +624,13 @@ export class Game {
     let spd = 120 + this.loop * 18 + this.stageIndex * 6 + (rage ? 16 : 0);
     if (this.loop === 0 && this.stageIndex === 0) spd *= 0.82;
     if (e.attack === "spread") {
-      for (let i = -5; i <= 5; i++) {
-        this._ebullet(e.x, e.y + 16, i * 34, spd);
+      const soft = this.loop === 0 && this.stageIndex === 0;
+      const lo = soft ? -4 : -5;
+      const hi = soft ? 4 : 5;
+      const step = soft ? 38 : 34;
+      for (let i = lo; i <= hi; i++) {
+        if (soft && i === 0) continue; // fresta no meio
+        this._ebullet(e.x, e.y + 16, i * step, spd);
       }
     } else if (e.attack === "aimed") {
       const a = angleTo(e.x, e.y, p.x, p.y);
@@ -636,8 +646,14 @@ export class Game {
         this._ebullet(e.x, e.y, Math.cos(a) * spd, Math.sin(a) * spd);
       }
     } else if (e.attack === "rain") {
-      for (let i = 0; i < 9; i++) {
-        this._ebullet(24 + i * 38, 8, (i - 4) * 6, spd * 0.9);
+      // Albatroz / loop 0: deixa corredores legíveis
+      const soft = this.loop === 0 && this.stageIndex === 0;
+      const n = soft ? 7 : 9;
+      const gap = soft ? 44 : 38;
+      const skip = soft ? 3 : -1; // corredor central
+      for (let i = 0; i < n; i++) {
+        if (i === skip) continue;
+        this._ebullet(28 + i * gap, 8, (i - (n / 2 | 0)) * (soft ? 4 : 6), spd * (soft ? 0.78 : 0.9));
       }
     } else if (e.attack === "sweep") {
       for (let i = 0; i < 8; i++) {
@@ -755,7 +771,7 @@ export class Game {
     if (vulnerable) {
       for (let i = this.eBullets.length - 1; i >= 0; i--) {
         const b = this.eBullets[i];
-        if (circleHit(p.x, p.y, PLAYER_HIT_R, b.x, b.y, b.r)) {
+        if (circleHit(p.x, p.y, playerHitR(p.focus), b.x, b.y, b.r)) {
           this.eBullets.splice(i, 1);
           this._playerHit();
           if (!p.alive) return;
@@ -764,7 +780,7 @@ export class Game {
       }
       for (const e of this.enemies) {
         if (e.dead) continue;
-        if (circleHit(p.x, p.y, PLAYER_HIT_R, e.x, e.y, e.r * 0.78)) {
+        if (circleHit(p.x, p.y, playerHitR(p.focus), e.x, e.y, e.r * 0.78)) {
           this._playerHit();
           if (!p.alive) return;
           break;
@@ -784,7 +800,8 @@ export class Game {
   _kill(e, fromBomb) {
     e.dead = true;
     if (!e.boss) {
-      this.fx.boom(e.x, e.y, 18, "#e8c070");
+      this.fx.boom(e.x, e.y, 20, "#e8c070");
+      if (e.boss) this.fx.boom(e.x, e.y, 28, "#ff9a4a");
       try { this.audio.explosion(); } catch (_) {}
     }
     if (fromBomb) {
@@ -844,6 +861,9 @@ export class Game {
       this.fx.flash = 0.24;
       try { this.audio.explosion(); this.audio.stage(); } catch (_) {}
       this.mode = "stageclear";
+      this.fx.floatText(W / 2, H * 0.42, "ESTÁGIO LIMPO!", "#ffe08a");
+      this.fx.boom(W / 2, H * 0.38, 22, "#e0b84a");
+      this.fx.shake = Math.max(this.fx.shake, 6);
       this._saveHigh();
     }
   }
@@ -882,6 +902,7 @@ export class Game {
   _applyPickup(kind, x, y) {
     const p = this.player;
     try { this.audio.pickup(); } catch (_) {}
+    this.fx.boom(x, y, 8, "#9ad4ff");
     if (kind === "shot") {
       p.spread = Math.min(MAX_SPREAD, p.spread + 2);
       p.spreadT = Math.max(p.spreadT, 14);
@@ -942,6 +963,9 @@ export class Game {
       this.enemies.length = 0;
       this.fx.reset();
       this.mode = "stageclear";
+      this.fx.floatText(W / 2, H * 0.42, "ESTÁGIO LIMPO!", "#ffe08a");
+      this.fx.boom(W / 2, H * 0.38, 22, "#e0b84a");
+      this.fx.shake = Math.max(this.fx.shake, 6);
       // sem audio.stage() pesado aqui — UI toca bip leve
       this._saveHigh();
     }

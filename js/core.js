@@ -6,6 +6,9 @@ export const H = 640;
 export const PLAYER_SPEED = 420;
 export const FOCUS_SPEED_MUL = 0.42;
 export const PLAYER_HIT_R = 7;
+export function playerHitR(focus) {
+  return focus ? 5.5 : PLAYER_HIT_R;
+}
 export const PLAYER_FIRE = 0.13;
 export const PLAYER_FIRE_RAPID = 0.065;
 export const INVULN_TIME = 2.2;

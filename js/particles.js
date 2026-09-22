@@ -7,6 +7,7 @@ export class FX {
     this.shake = 0;
     this.flash = 0;
     this.hurt = 0;
+    this.reduced = false;
   }
 
   reset() {
@@ -62,8 +63,16 @@ export class FX {
         kind: "puff",
       });
     }
-    this.shake = Math.min(14, this.shake + 4.5);
-    this.flash = Math.max(this.flash, 0.2);
+    // anel de impacto
+    this.bits.push({
+      x, y, vx: 0, vy: 0,
+      life: 0.28, max: 0.28, r: 10,
+      color: "#fff6c8", kind: "ring",
+    });
+    if (!this.reduced) {
+      this.shake = Math.min(14, this.shake + 4.5);
+      this.flash = Math.max(this.flash, 0.2);
+    }
   }
 
   trail(x, y, color = "#9ad4ff") {
@@ -161,7 +170,7 @@ export class FX {
       p.life -= dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      if (p.kind !== "glow") p.vy += 40 * dt;
+      if (p.kind !== "glow" && p.kind !== "ring") p.vy += 40 * dt;
       else p.r *= 1 + dt * 2.2;
       if (p.life <= 0) this.bits.splice(i, 1);
     }
@@ -178,7 +187,13 @@ export class FX {
       const a = Math.max(0, p.life / p.max);
       ctx.globalAlpha = a;
       ctx.fillStyle = p.color;
-      if (p.kind === "glow") {
+      if (p.kind === "ring") {
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r + (1 - a) * 36, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (p.kind === "glow") {
         const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * (0.6 + a));
         g.addColorStop(0, "rgba(255,246,200,0.9)");
         g.addColorStop(0.45, "rgba(255,160,60,0.35)");

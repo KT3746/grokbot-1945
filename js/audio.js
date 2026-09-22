@@ -46,7 +46,7 @@ export class AudioSys {
     this.master.connect(this.ctx.destination);
 
     this.musicGain = this.ctx.createGain();
-    this.musicGain.gain.value = 0.46;
+    this.musicGain.gain.value = 0.5;
     this.musicGain.connect(this.comp);
 
     this.sfxGain = this.ctx.createGain();

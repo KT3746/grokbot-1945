@@ -14,6 +14,12 @@ const ui = new UI(game, audio, input);
 const touchNav = document.getElementById("touch");
 
 let last = performance.now();
+const reducedMotion =
+  typeof matchMedia !== "undefined" &&
+  matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (reducedMotion) {
+  try { game.fx.reduced = true; } catch (_) {}
+}
 let lastMode = game.mode;
 
 function releaseTouch() {
