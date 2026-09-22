@@ -89,6 +89,7 @@ export class Game {
     this.runT = 0;
     this.emptyT = 0;
     this.bombCd = 0;
+    this.bombShieldT = 0;
     this.hitStop = 0;
     this.player = this._player();
     this.enemies = pool();
@@ -148,7 +149,7 @@ export class Game {
     this.cleared = false;
     try {
       this.audio.setStage?.(this.stageIndex, meta.palette);
-      this.audio.stage();
+      try { this.audio.stage(); } catch (_) {}
     } catch (_) {}
   }
 
@@ -161,6 +162,13 @@ export class Game {
   }
 
   update(dt, input) {
+    if (this.mode !== "playing") {
+      // pausa/overlays: congela mundo; só deixa FX decair
+      this.fx.update(dt);
+      if (this.bannerT > 0) this.bannerT -= dt;
+      input.clearPlay?.();
+      return;
+    }
     if (this.hitStop > 0) {
       this.hitStop -= dt;
       dt *= 0.15;
@@ -168,10 +176,6 @@ export class Game {
     this.bgScroll += dt * this._scrollSpeed();
     this.fx.update(dt);
     if (this.bannerT > 0) this.bannerT -= dt;
-    if (this.mode !== "playing") {
-      input.clearPlay?.();
-      return;
-    }
     this.runT += dt;
 
     if (this.introT > 0) this.introT -= dt;
@@ -190,14 +194,15 @@ export class Game {
           matchMedia("(max-width: 720px), (pointer: coarse)").matches);
       const yMax = touchUI ? H - 150 : H - 28;
       if (input.aimActive) {
-        // finger-follow absoluto (suave) + delta relativo — toque e arraste funcionam
+        // finger-follow absoluto só (evita misturar CSS-px com canvas)
         if (input.aimAbsOn && input.aimAbsX != null) {
-          const k = Math.min(1, 14 * dt);
+          const k = Math.min(1, 16 * dt);
           p.x = clamp(p.x + (input.aimAbsX - p.x) * k, 16, W - 16);
           p.y = clamp(p.y + (input.aimAbsY - p.y) * k, 40, yMax);
+        } else {
+          p.x = clamp(p.x + (input.aimDX || 0), 16, W - 16);
+          p.y = clamp(p.y + (input.aimDY || 0), 40, yMax);
         }
-        p.x = clamp(p.x + (input.aimDX || 0), 16, W - 16);
-        p.y = clamp(p.y + (input.aimDY || 0), 40, yMax);
         input.aimDX = 0;
         input.aimDY = 0;
         input.aimFresh = false;
@@ -213,7 +218,7 @@ export class Game {
       if (input.fireHeld && p.fireCd <= 0) {
         this._playerShoot();
         p.fireCd = p.rapidT > 0 ? PLAYER_FIRE_RAPID : PLAYER_FIRE;
-        this.audio.shoot();
+        try { this.audio.shoot(); } catch (_) {}
       }
       if (input.consumeBomb() && this.bombCd <= 0) this._bomb();
       if (Math.random() < dt * 4) this.fx.trail(p.x + (Math.random() - 0.5) * 8, p.y + 16);
@@ -285,7 +290,7 @@ export class Game {
     if (this.bombs <= 0 || !this.player.alive || this.bombCd > 0) return;
     this.bombs--;
     this.bombCd = BOMB_COOLDOWN;
-    this.audio.bigBoom();
+    try { this.audio.bigBoom(); } catch (_) {}
     this.fx.boom(this.player.x, this.player.y, 36, "#9ad4ff");
     this.fx.boom(this.player.x, this.player.y - 20, 14, "#ffe08a");
     this.fx.shake = 8;
@@ -481,8 +486,8 @@ export class Game {
     };
     this.enemies.push(e);
     this.boss = e;
-    this.audio.warning();
-    this.audio.setIntense(1);
+    try { this.audio.warning(); } catch (_) {}
+    try { this.audio.setIntense(1); } catch (_) {}
     this.banner = BOSS_NAMES[id];
     this.bannerSub = (BOSS_META[id] && BOSS_META[id].subtitle) || "Chefe à frente.";
     this.bannerT = 2.8;
@@ -568,7 +573,7 @@ export class Game {
       this.bannerT = 1.6;
       this.bannerKind = "boss";
       this.fx.flash = 0.18;
-      this.audio.warning();
+      try { this.audio.warning(); } catch (_) {}
     }
     if (frenzy && !e.frenzied) {
       e.frenzied = true;
@@ -578,7 +583,7 @@ export class Game {
       this.bannerT = 1.6;
       this.bannerKind = "boss";
       this.fx.shake = Math.max(this.fx.shake, 5);
-      this.audio.warning();
+      try { this.audio.warning(); } catch (_) {}
     }
     const sway = (e.kind === "serpente" ? 110 : 88) * (frenzy ? 1.25 : rage ? 1.1 : 1);
     const swaySpd = (frenzy ? 1.05 : rage ? 0.85 : 0.65);
@@ -604,7 +609,7 @@ export class Game {
           : this.loop === 0 && this.stageIndex === 0
             ? 1.55
             : 1.15;
-      this.audio.warning();
+      try { this.audio.warning(); } catch (_) {}
     }
   }
 
@@ -746,7 +751,7 @@ export class Game {
 
     if (!p.alive) return;
 
-    const vulnerable = p.invuln <= 0;
+    const vulnerable = p.invuln <= 0 && !(this.bombShieldT > 0);
     if (vulnerable) {
       for (let i = this.eBullets.length - 1; i >= 0; i--) {
         const b = this.eBullets[i];
@@ -780,7 +785,7 @@ export class Game {
     e.dead = true;
     if (!e.boss) {
       this.fx.boom(e.x, e.y, 18, "#e8c070");
-      this.audio.explosion();
+      try { this.audio.explosion(); } catch (_) {}
     }
     if (fromBomb) {
       this._addScore(BOMB_SCORE);
@@ -850,12 +855,12 @@ export class Game {
       p.shield--;
       p.invuln = 0.8;
       this.fx.boom(p.x, p.y, 10, "#9ad4ff");
-      this.audio.hit();
+      try { this.audio.hit(); } catch (_) {}
       this.fx.floatText(p.x, p.y - 16, "ESCUDO", "#9ad4ff");
       return;
     }
     this.lives--;
-    this.audio.hurt();
+    try { this.audio.hurt(); } catch (_) {}
     this.fx.playerHurt();
     this.fx.boom(p.x, p.y, 22, "#e85d4c");
     this.fx.flash = Math.max(this.fx.flash, 0.32);
@@ -868,7 +873,7 @@ export class Game {
       p.alive = false;
       this.mode = "gameover";
       this._saveHigh();
-      this.audio.gameover();
+      try { this.audio.gameover(); } catch (_) {}
       return;
     }
     this.spawnPlayer();
@@ -876,7 +881,7 @@ export class Game {
 
   _applyPickup(kind, x, y) {
     const p = this.player;
-    this.audio.pickup();
+    try { this.audio.pickup(); } catch (_) {}
     if (kind === "shot") {
       p.spread = Math.min(MAX_SPREAD, p.spread + 2);
       p.spreadT = Math.max(p.spreadT, 14);
@@ -906,7 +911,7 @@ export class Game {
     const extra = extraLifeEarned(prev, this.score);
     if (extra) {
       this.lives += extra;
-      this.audio.extraLife();
+      try { this.audio.extraLife(); } catch (_) {}
       this.fx.floatText(this.player.x, this.player.y - 28, "VIDA +1", "#7dce9a");
     }
     if (this.score > this.high) {
@@ -957,7 +962,8 @@ export class Game {
     }
     this.mode = "playing";
     this.introT = 1.8;
-    this.player.invuln = 1.4;
+    this.bombShieldT = 0;
+    this.player.invuln = Math.max(2.0, this.introT);
     this._announceStage();
   }
 
