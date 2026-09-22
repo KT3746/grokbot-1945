@@ -112,9 +112,21 @@ export class Input {
       this.aimFresh = !!fresh;
       return;
     }
-    const s = this.aimSensitivity || 2.4;
-    this.aimDX += (p.x - this._aimLast.x) * s;
-    this.aimDY += (p.y - this._aimLast.y) * s;
+    // deltas só como fallback se abs falhar; em canvas-space
+    if (!this.aimAbsOn) {
+      const canvas = document.getElementById("game");
+      let s = this.aimSensitivity || 2.4;
+      if (canvas) {
+        const r = canvas.getBoundingClientRect();
+        const sx = (canvas.width || 360) / Math.max(1, r.width);
+        const sy = (canvas.height || 640) / Math.max(1, r.height);
+        this.aimDX += (p.x - this._aimLast.x) * sx * s;
+        this.aimDY += (p.y - this._aimLast.y) * sy * s;
+      } else {
+        this.aimDX += (p.x - this._aimLast.x) * s;
+        this.aimDY += (p.y - this._aimLast.y) * s;
+      }
+    }
     this._aimLast = { x: p.x, y: p.y };
   }
 
@@ -290,14 +302,19 @@ export class Input {
   clearPlay() {
     this.bombPressed = false;
     this.fireHeld = false;
+    this.focusHeld = false;
     this._fireBtn = false;
     this._bombBtn = false;
+    this._focusBtn = false;
     this.moveX = 0;
     this.moveY = 0;
     this.aimActive = false;
     this.aimFresh = false;
     this.aimDX = 0;
     this.aimDY = 0;
+    this.aimAbsOn = false;
+    this.aimAbsX = null;
+    this.aimAbsY = null;
     this._aimLast = null;
     this._aim.active = false;
     this._aim.id = null;
@@ -335,8 +352,13 @@ export class Input {
       this.moveX = 0;
       this.moveY = 0;
       this.fireHeld = false;
+      this.focusHeld = false;
       this.bombPressed = false;
       this.aimActive = false;
+      this.aimAbsOn = false;
+      this._fireBtn = false;
+      this._bombBtn = false;
+      this._focusBtn = false;
       return;
     }
     let x = 0;
