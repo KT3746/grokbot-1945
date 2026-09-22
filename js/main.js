@@ -34,6 +34,11 @@ function releaseTouch() {
     if (typeof input._endStick === "function") input._endStick();
     input._fireBtn = false;
     input._bombBtn = false;
+    input._focusBtn = false;
+    input.focusHeld = false;
+    input.aimAbsOn = false;
+    input.aimAbsX = null;
+    input.aimAbsY = null;
   } catch (_) {}
 }
 
@@ -61,7 +66,11 @@ function frame(now) {
     input.playLocked = false;
   }
 
-  game.update(dt, input);
+  try {
+    game.update(dt, input);
+  } catch (err) {
+    console.error("game.update", err);
+  }
   // áudio nunca pode derrubar o frame (senão o avião some)
   if (game.mode === "playing") {
     try {
