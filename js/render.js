@@ -768,3 +768,5 @@ export class Renderer {
     ctx.restore();
   }
 }
+
+export { Renderer as CanvasRenderer };
