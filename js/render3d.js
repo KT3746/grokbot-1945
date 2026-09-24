@@ -214,8 +214,8 @@ export class ThreeRenderer {
     this.world.add(this.deep);
 
     this.foam = [];
-    const foamN = this.lowFx ? 7 : 12;
-    const foamGeo = new THREE.PlaneGeometry(W * 1.6, 7);
+    const foamN = this.lowFx ? 6 : 9;
+    const foamGeo = new THREE.PlaneGeometry(W * 0.55, 5);
     for (let i = 0; i < foamN; i++) {
       const m = new THREE.Mesh(foamGeo, this.foamMat);
       m.position.z = -9.2;
@@ -333,42 +333,42 @@ export class ThreeRenderer {
   makePlane(isPlayer) {
     const root = new THREE.Group();
     const body = new THREE.Mesh(
-      new THREE.BoxGeometry(3.2, 11, 2.2),
+      new THREE.BoxGeometry(8, 26, 5.2),
       this.mat(isPlayer ? 0x6a7c32 : 0xc43a28),
     );
     const wing = new THREE.Mesh(
-      new THREE.BoxGeometry(16, 2.6, 0.55),
+      new THREE.BoxGeometry(36, 6.2, 1.15),
       this.mat(isPlayer ? 0x4a5c28 : 0x8a2820),
     );
-    wing.position.y = -0.4;
-    const tipL = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.6, 0.7), this.mat(0xd4c24a));
-    tipL.position.set(-7.2, -0.4, 0.1);
+    wing.position.y = -1;
+    const tipL = new THREE.Mesh(new THREE.BoxGeometry(5.2, 6.2, 1.4), this.mat(0xd4c24a));
+    tipL.position.set(-16.5, -1, 0.2);
     const tipR = tipL.clone();
-    tipR.position.x = 7.2;
-    const tail = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.4, 0.45), this.mat(isPlayer ? 0x3a4a20 : 0x6a2020));
-    tail.position.y = -5.6;
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.8, 2.4), this.mat(isPlayer ? 0x3a4a20 : 0x6a2020));
-    fin.position.set(0, -5.4, 1.4);
+    tipR.position.x = 16.5;
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(16, 3.2, 1), this.mat(isPlayer ? 0x3a4a20 : 0x6a2020));
+    tail.position.y = -12.4;
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(1.1, 4, 5.5), this.mat(isPlayer ? 0x3a4a20 : 0x6a2020));
+    fin.position.set(0, -12, 3.2);
     const cockpit = new THREE.Mesh(
-      new THREE.BoxGeometry(1.8, 2.4, 1.1),
+      new THREE.BoxGeometry(4.2, 5.5, 2.4),
       this.mat(0x7ec8e8, { emissive: 0x3a88b0, em: 0.35 }),
     );
-    cockpit.position.set(0, 1.6, 1.3);
+    cockpit.position.set(0, 4, 3);
     const prop = new THREE.Mesh(
-      new THREE.BoxGeometry(10, 0.35, 0.25),
+      new THREE.BoxGeometry(22, 0.7, 0.45),
       new THREE.MeshBasicMaterial({ color: 0xf0f0dc, transparent: true, opacity: 0.55 }),
     );
-    prop.position.y = 6.2;
+    prop.position.y = 14;
     const flame = new THREE.Mesh(
-      new THREE.ConeGeometry(1.5, 6, 6),
+      new THREE.ConeGeometry(3.2, 12, 6),
       new THREE.MeshBasicMaterial({ color: 0x9ad4ff, transparent: true, opacity: 0.85 }),
     );
     flame.rotation.x = Math.PI;
-    flame.position.y = -8.2;
+    flame.position.y = -18;
     flame.visible = !!isPlayer;
 
-    const mark = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.8, 0.3), this.mat(0xb33a2a));
-    mark.position.set(0, -1.2, 1.25);
+    const mark = new THREE.Mesh(new THREE.BoxGeometry(3.6, 4, 0.6), this.mat(0xb33a2a));
+    mark.position.set(0, -2.4, 2.9);
 
     root.add(body, wing, tipL, tipR, tail, fin, cockpit, prop, flame, mark);
     root.userData = { body, wing, tipL, tipR, tail, fin, cockpit, prop, flame, mark, kind: isPlayer ? "player" : "vespa" };
@@ -377,10 +377,10 @@ export class ThreeRenderer {
 
   makeNinho() {
     const root = new THREE.Group();
-    const pad = new THREE.Mesh(new THREE.CylinderGeometry(9, 11, 3, 8), this.mat(0x3a4a38));
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(16, 20, 5, 8), this.mat(0x3a4a38));
     pad.rotation.x = Math.PI / 2;
-    const gun = new THREE.Mesh(new THREE.BoxGeometry(3, 6, 3), this.mat(0x4a5c28));
-    gun.position.z = 4;
+    const gun = new THREE.Mesh(new THREE.BoxGeometry(6, 12, 6), this.mat(0x4a5c28));
+    gun.position.z = 7;
     root.add(pad, gun);
     root.userData = { pad, gun, kind: "ninho" };
     return root;
@@ -388,14 +388,14 @@ export class ThreeRenderer {
 
   makeBoss() {
     const root = new THREE.Group();
-    const hull = new THREE.Mesh(new THREE.BoxGeometry(22, 28, 6), this.mat(0x6a7888));
-    const wing = new THREE.Mesh(new THREE.BoxGeometry(48, 8, 1.4), this.mat(0x3a4858));
-    const bridge = new THREE.Mesh(new THREE.BoxGeometry(10, 8, 5), this.mat(0xe0b84a, { emissive: 0x8a6010, em: 0.25 }));
-    bridge.position.z = 4.2;
-    const nacelleL = new THREE.Mesh(new THREE.BoxGeometry(6, 10, 4), this.mat(0x4a5868));
-    nacelleL.position.set(-16, 2, -1);
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(42, 52, 10), this.mat(0x6a7888));
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(88, 14, 2.6), this.mat(0x3a4858));
+    const bridge = new THREE.Mesh(new THREE.BoxGeometry(18, 14, 9), this.mat(0xe0b84a, { emissive: 0x8a6010, em: 0.25 }));
+    bridge.position.z = 8;
+    const nacelleL = new THREE.Mesh(new THREE.BoxGeometry(11, 18, 7), this.mat(0x4a5868));
+    nacelleL.position.set(-30, 4, -2);
     const nacelleR = nacelleL.clone();
-    nacelleR.position.x = 16;
+    nacelleR.position.x = 30;
     root.add(hull, wing, bridge, nacelleL, nacelleR);
     root.userData = { hull, wing, bridge, kind: "boss" };
     return root;
@@ -598,9 +598,10 @@ export class ThreeRenderer {
 
   _scrollTerrain(key, scroll, look) {
     for (let i = 0; i < this.foam.length; i++) {
-      const yPix = ((i * 58 + scroll * (key === "storm" ? 1.15 : 0.9)) % (H + 58)) - 28;
-      this.foam[i].position.set(0, gyToY(yPix), -9.2);
-      this.foam[i].material.opacity = key === "tropic" ? 0.2 : key === "fortress" ? 0.08 : 0.14;
+      const yPix = ((i * 72 + scroll * (key === "storm" ? 1.15 : 0.9)) % (H + 72)) - 36;
+      const xOff = ((i * 47) % 160) - 80;
+      this.foam[i].position.set(xOff, gyToY(yPix), -9.2);
+      this.foam[i].material.opacity = key === "tropic" ? 0.16 : key === "fortress" ? 0.06 : 0.1;
     }
     for (const isle of this.islands) {
       const mul = key === "fortress" ? 0.75 : 0.55;
@@ -669,7 +670,7 @@ export class ThreeRenderer {
     if (!show) return;
     const blink = p.invuln > 0 && ((p.invuln * 12) | 0) % 2 === 0 && p.invuln > 0.2;
     this.playerMesh.visible = !blink;
-    this.playerMesh.position.set(gxToX(p.x), gyToY(p.y), 4.2);
+    this.playerMesh.position.set(gxToX(p.x), gyToY(p.y), 6.2);
     this.playerMesh.rotation.z = 0;
     const ud = this.playerMesh.userData;
     if (ud.prop) ud.prop.rotation.z = this.time * 28;
