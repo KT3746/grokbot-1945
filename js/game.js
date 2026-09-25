@@ -120,7 +120,7 @@ export class Game {
     this.resetRun();
     this.stageIndex = clamp(fromStage, 0, STAGES.length - 1);
     this.mode = "playing";
-    this.introT = 2.2;
+    this.introT = this.stageIndex === 0 ? 2.8 : 2.2;
     this._announceStage();
     this.spawnPlayer();
   }
@@ -131,7 +131,8 @@ export class Game {
       typeof matchMedia !== "undefined" &&
       matchMedia("(max-width: 720px), (pointer: coarse)").matches;
     this.player.y = touchSpawn ? Math.floor(H * 0.68) : H - 78;
-    this.player.invuln = INVULN_TIME;
+    this.player.invuln =
+      this.stageIndex === 0 && this.loop === 0 ? 2.8 : INVULN_TIME;
     this.player.alive = true;
     this.player.fireCd = 0.2;
   }
@@ -194,7 +195,18 @@ export class Game {
         (typeof matchMedia !== "undefined" &&
           matchMedia("(max-width: 720px), (pointer: coarse)").matches);
       const yMax = touchUI ? H - 150 : H - 28;
-      if (input.aimActive) {
+      const keyed =
+        Math.abs(input.moveX || 0) > 1e-4 || Math.abs(input.moveY || 0) > 1e-4;
+      if (keyed) {
+        // WASD / setas / stick sempre ganham do finger-follow
+        if (typeof input._endAim === "function") input._endAim();
+        else {
+          input.aimActive = false;
+          input.aimAbsOn = false;
+        }
+        p.x = clamp(p.x + input.moveX * spd * dt, 16, W - 16);
+        p.y = clamp(p.y + input.moveY * spd * dt, 40, yMax);
+      } else if (input.aimActive) {
         // finger-follow absoluto só (evita misturar CSS-px com canvas)
         if (input.aimAbsOn && input.aimAbsX != null) {
           const k = Math.min(1, 16 * dt);
