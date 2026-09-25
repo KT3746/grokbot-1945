@@ -13,11 +13,18 @@
     <meta property="og:description" content="Arcade vertical premium. Domine o céu. Sobreviva às ondas." />
     <meta property="og:type" content="website" />
     <title>1945</title>
-    <link rel="icon" href="assets/favicon.svg?v=1.10.0" type="image/svg+xml" />
+    <link rel="icon" href="assets/favicon.svg?v=202609242002" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/styles.css?v=1.10.0" />
+    <link rel="stylesheet" href="css/styles.css?v=202609242002" />
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "./js/vendor/three.module.js?v=202609242002"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="app">
@@ -60,6 +67,8 @@
 
         <main class="stage">
           <div id="board-wrap">
+            <p id="webgl-fail" class="webgl-fail" hidden role="status"></p>
+            <canvas id="view3d" aria-hidden="true"></canvas>
             <canvas id="game" width="360" height="640" role="img" aria-label="Área de jogo 1945"></canvas>
             <div id="boss-bar" class="boss-bar hidden" aria-hidden="true">
               <span id="boss-name">Chefe</span>
@@ -85,7 +94,7 @@
 
     <div id="screen-title" class="overlay" role="dialog" aria-modal="true" aria-labelledby="title-h">
       <div class="modal">
-        <p class="eyebrow">1945 · <span id="title-ver">v1.10.0</span></p>
+        <p class="eyebrow">1945 · <span id="title-ver">v1.11.0</span></p>
         <h2 id="title-h">1945</h2>
         <p class="tagline">Arcade premium · vista de cima · PC e celular</p>
         <p class="tagline subtag">Domine o céu. Sobreviva às ondas.</p>
@@ -160,7 +169,7 @@
       </div>
     </div>
 
-    <div id="ver" class="foot">v1.10.0</div>
-    <script type="module" src="js/main.js?v=1.10.0"></script>
+    <div id="ver" class="foot">v1.11.0</div>
+    <script type="module" src="js/main.js?v=202609242002"></script>
   </body>
 </html>

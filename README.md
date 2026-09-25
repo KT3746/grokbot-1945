@@ -78,11 +78,18 @@ npm test
 - `js/game.js` — ondas, chefes, tiros, bônus
 - `js/stages.js` — os 5 estágios
 - `js/sprites.js` — aviões desenhados no canvas
-- `js/render.js` — mar, ilhas, nuvens, suco visual
+- `js/render.js` — visual clássico 2D (fallback)
+- `js/render3d.js` — visual Three.js (mar, céu, aviões, explosões)
+- `js/renderer.js` — escolhe 3D ou 2D
+- `js/vendor/three.module.js` — Three.js r160 local (licença MIT)
 - `js/particles.js` — explosões, rastros, combo
 - `js/input.js` — teclado e toque
 - `js/audio.js` — sons
 - `js/ui.js` — telas (título, pausa, vitória, fim)
 - `js/main.js` — liga o loop a 60 fps
 
-Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é a fonte da verdade: título, rodapé e todos os `?v=` do HTML devem mostrar o mesmo número (agora **1.2.0**).
+## Visual 3D
+
+O jogo desenha o céu, o mar e os aviões em **Three.js** (baixo-poli, `FogExp2`), com o arquivo da biblioteca **local** em `js/vendor/` — sem CDN. Os botões, o placar e os toques continuam em HTML. Se o aparelho não tiver WebGL, aparece um aviso em português e o visual clássico em canvas 2D entra no lugar. A lógica (tiros, bombas, chefes, pausa) não muda.
+
+Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.11.0**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).

@@ -24,7 +24,8 @@ import {
   BOSS_NAMES,
   STAGE_META,
 } from "../js/core.js";
-import { VERSION } from "../js/version.js";
+import { VERSION, CACHE_V } from "../js/version.js";
+import { FAIL_PT } from "../js/renderer.js";
 import { STAGES } from "../js/stages.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -114,14 +115,27 @@ test("estágio 1 sem buraco longo entre ondas", () => {
   assert.ok(EMPTY_FILL_SEC <= 3.2);
 });
 
-test("versão 1.0.3 é a única no HTML", () => {
-  assert.equal(VERSION, "1.0.3");
+test("versão 1.11.0 e cache-bust alinhados", () => {
+  assert.equal(VERSION, "1.11.0");
+  assert.match(CACHE_V, /^20260924\d{4}$/);
   const html = readFileSync(join(root, "index.html"), "utf8");
-  const qs = html.match(/\?v=([0-9.]+)/g) || [];
+  const css = readFileSync(join(root, "css/styles.css"), "utf8");
+  const qs = html.match(/\?v=([0-9]+)/g) || [];
   assert.ok(qs.length >= 3);
-  for (const q of qs) assert.equal(q, "?v=1.0.3");
-  assert.equal(html.includes("1.0.2"), false);
-  assert.equal(html.includes("1.0.1"), false);
-  assert.match(html, /id="title-ver">v1\.0\.3</);
-  assert.match(html, /id="ver"[^>]*>v1\.0\.3</);
+  for (const q of qs) assert.equal(q, `?v=${CACHE_V}`);
+  assert.match(html, /id="title-ver">v1\.11\.0</);
+  assert.match(html, /id="ver"[^>]*>v1\.11\.0</);
+  assert.match(html, /type="importmap"/);
+  assert.match(html, /js\/vendor\/three\.module\.js/);
+  assert.match(html, /id="view3d"/);
+  assert.match(html, /id="webgl-fail"/);
+  assert.match(css, /\.webgl-fail/);
+  const three = readFileSync(join(root, "js/vendor/three.module.js"), "utf8");
+  assert.match(three, /REVISION = '160'/);
+  assert.equal(html.toLowerCase().includes("capcom"), false);
+});
+
+test("falha de WebGL em português e fallback 2D", () => {
+  assert.match(FAIL_PT, /Não foi possível iniciar o gráfico 3D/);
+  assert.match(FAIL_PT, /2D/);
 });

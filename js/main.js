@@ -2,14 +2,18 @@ import { VERSION } from "./version.js";
 import { AudioSys } from "./audio.js";
 import { Input } from "./input.js";
 import { Game } from "./game.js";
-import { Renderer } from "./render.js";
+import { createRenderer } from "./renderer.js";
 import { UI } from "./ui.js";
 
 const audio = new AudioSys();
 const input = new Input();
 const game = new Game(audio);
 const canvas = document.getElementById("game");
-const renderer = new Renderer(canvas);
+const created = await createRenderer(canvas, {
+  failEl: document.getElementById("webgl-fail"),
+  view3d: document.getElementById("view3d"),
+});
+const renderer = created.renderer;
 const ui = new UI(game, audio, input);
 const touchNav = document.getElementById("touch");
 
