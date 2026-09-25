@@ -81,3 +81,51 @@ test("Continuar com input limpo não solta bomba atrasada", () => {
   assert.equal(game.bombs, START_BOMBS);
   assert.equal(game.pBullets.length, 0);
 });
+
+test("WASD move mesmo com aimActive preso (clique de mouse)", () => {
+  const game = new Game(silentAudio());
+  game.start(0);
+  const x0 = game.player.x;
+  const y0 = game.player.y;
+  const input = fakeInput({
+    moveX: 1,
+    moveY: -1,
+    aimActive: true,
+    aimAbsOn: true,
+    aimAbsX: x0,
+    aimAbsY: y0,
+    _endAim() {
+      this.aimActive = false;
+      this.aimAbsOn = false;
+      this.aimAbsX = null;
+      this.aimAbsY = null;
+    },
+  });
+  game.update(0.2, input);
+  assert.ok(game.player.x > x0 + 8, "teclado deve ir para a direita");
+  assert.ok(game.player.y < y0 - 8, "teclado deve ir para cima");
+  assert.equal(input.aimActive, false);
+});
+
+test("finger-follow absoluto ainda move sem teclado", () => {
+  const game = new Game(silentAudio());
+  game.start(0);
+  const x0 = game.player.x;
+  const input = fakeInput({
+    moveX: 0,
+    moveY: 0,
+    aimActive: true,
+    aimAbsOn: true,
+    aimAbsX: x0 + 90,
+    aimAbsY: game.player.y,
+  });
+  game.update(0.25, input);
+  assert.ok(game.player.x > x0 + 20, "dedo deve puxar o avião");
+});
+
+test("intro do estágio 1 dá um pouco mais de invuln", () => {
+  const game = new Game(silentAudio());
+  game.start(0);
+  assert.ok(game.player.invuln >= 2.8);
+  assert.ok(game.introT >= 2.8);
+});

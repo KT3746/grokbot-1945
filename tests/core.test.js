@@ -115,16 +115,16 @@ test("estágio 1 sem buraco longo entre ondas", () => {
   assert.ok(EMPTY_FILL_SEC <= 3.2);
 });
 
-test("versão 1.11.0 e cache-bust alinhados", () => {
-  assert.equal(VERSION, "1.11.0");
-  assert.match(CACHE_V, /^20260924\d{4}$/);
+test("versão 1.11.1 e cache-bust alinhados", () => {
+  assert.equal(VERSION, "1.11.1");
+  assert.match(CACHE_V, /^\d{12}$/);
   const html = readFileSync(join(root, "index.html"), "utf8");
   const css = readFileSync(join(root, "css/styles.css"), "utf8");
   const qs = html.match(/\?v=([0-9]+)/g) || [];
   assert.ok(qs.length >= 3);
   for (const q of qs) assert.equal(q, `?v=${CACHE_V}`);
-  assert.match(html, /id="title-ver">v1\.11\.0</);
-  assert.match(html, /id="ver"[^>]*>v1\.11\.0</);
+  assert.match(html, /id="title-ver">v1\.11\.1</);
+  assert.match(html, /id="ver"[^>]*>v1\.11\.1</);
   assert.match(html, /type="importmap"/);
   assert.match(html, /js\/vendor\/three\.module\.js/);
   assert.match(html, /id="view3d"/);

@@ -92,4 +92,4 @@ npm test
 
 O jogo desenha o céu, o mar e os aviões em **Three.js** (baixo-poli, `FogExp2`), com o arquivo da biblioteca **local** em `js/vendor/` — sem CDN. Os botões, o placar e os toques continuam em HTML. Se o aparelho não tiver WebGL, aparece um aviso em português e o visual clássico em canvas 2D entra no lugar. A lógica (tiros, bombas, chefes, pausa) não muda.
 
-Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.11.0**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).
+Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.11.1**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).

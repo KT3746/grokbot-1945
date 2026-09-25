@@ -2,7 +2,14 @@
  * Teclado + arraste no playfield (finger-follow) + botões de fogo/bomba.
  * No celular: toque/arraste em qualquer lugar do canvas move o avião
  * seguindo o dedo (offset no primeiro toque, sem teleporte).
+ * Mouse no desktop NÃO inicia aim — WASD/setas continuam no comando.
  */
+
+/** Finger-follow só com dedo/caneta. Mouse nunca entra nesse modo. */
+export function isFingerPointer(pointerType) {
+  return pointerType === "touch" || pointerType === "pen";
+}
+
 export class Input {
   constructor() {
     this.moveX = 0;
@@ -87,8 +94,13 @@ export class Input {
     return { x, y };
   }
 
+  _enableTouchIfFinger(e) {
+    if (isFingerPointer(e && e.pointerType)) this.touchEnabled = true;
+  }
+
   _setAimFromEvent(e, fresh) {
-    this.touchEnabled = true;
+    if (!isFingerPointer(e && e.pointerType)) return;
+    this._enableTouchIfFinger(e);
     this.aimActive = true;
     const canvas = document.getElementById("game");
     let cx = e.clientX;
@@ -159,7 +171,8 @@ export class Input {
 
     const onDown = (e) => {
       if (this.playLocked) return;
-      if (e.pointerType === "mouse" && e.button !== 0) return;
+      // mouse no canvas: não rouba o teclado nem marca UI de toque
+      if (!isFingerPointer(e.pointerType)) return;
       if (isUiChrome(e.target)) return;
       e.preventDefault();
       try {
@@ -172,6 +185,7 @@ export class Input {
 
     const onMove = (e) => {
       if (!this._aim.active || e.pointerId !== this._aim.id) return;
+      if (!isFingerPointer(e.pointerType)) return;
       e.preventDefault();
       this._setAimFromEvent(e, false);
     };
@@ -185,7 +199,7 @@ export class Input {
     target.addEventListener("pointerup", onUp);
     target.addEventListener("pointercancel", onUp);
     target.addEventListener("lostpointercapture", () => {
-      if (this._aim.active) this._endAim(this._aim.id);
+      this._endAim();
     });
   }
 
@@ -236,7 +250,7 @@ export class Input {
         stick.setPointerCapture(e.pointerId);
         this._stick.active = true;
         this._stick.id = e.pointerId;
-        this.touchEnabled = true;
+        this._enableTouchIfFinger(e);
         setFrom(e.clientX, e.clientY);
       });
       stick.addEventListener("pointermove", (e) => {
@@ -269,7 +283,7 @@ export class Input {
       const on = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.touchEnabled = true;
+        this._enableTouchIfFinger(e);
         setter(true);
       };
       const off = () => setter(false);
@@ -289,7 +303,7 @@ export class Input {
       bomb.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.touchEnabled = true;
+        this._enableTouchIfFinger(e);
         this.bombPressed = true;
         this._bombBtn = true;
       });
@@ -308,16 +322,7 @@ export class Input {
     this._focusBtn = false;
     this.moveX = 0;
     this.moveY = 0;
-    this.aimActive = false;
-    this.aimFresh = false;
-    this.aimDX = 0;
-    this.aimDY = 0;
-    this.aimAbsOn = false;
-    this.aimAbsX = null;
-    this.aimAbsY = null;
-    this._aimLast = null;
-    this._aim.active = false;
-    this._aim.id = null;
+    this._endAim();
     for (const code of [
       "Space",
       "KeyZ",
@@ -354,8 +359,7 @@ export class Input {
       this.fireHeld = false;
       this.focusHeld = false;
       this.bombPressed = false;
-      this.aimActive = false;
-      this.aimAbsOn = false;
+      this._endAim();
       this._fireBtn = false;
       this._bombBtn = false;
       this._focusBtn = false;
