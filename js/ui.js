@@ -142,6 +142,7 @@ export class UI {
     this.game.resume();
     this.show(null);
     this._blurChrome();
+    try { this.audio.resume(); } catch (_) { /* ok */ }
   }
 
   togglePause() {
@@ -149,6 +150,7 @@ export class UI {
       this.game.pause();
       this._lockPlay();
       this.show("pause");
+      try { this.audio.suspend(); } catch (_) { /* ok */ }
     } else if (this.game.mode === "paused") {
       this.resume();
     }

@@ -159,15 +159,16 @@ export class Input {
   }
 
   _bindAim() {
-    const canvas = document.getElementById("game");
+    /* Canvas usa pointer-events:none — toque cai em #board-wrap; HUD fica de fora. */
     const wrap = document.getElementById("board-wrap");
-    const target = canvas || wrap;
+    const canvas = document.getElementById("game");
+    const target = wrap || canvas;
     if (!target) return;
 
     const isUiChrome = (el) =>
       el &&
       el.closest &&
-      el.closest("#btn-fire, #btn-bomb, #btn-focus, #stick, #btn-pause, #btn-mute");
+      el.closest("#btn-fire, #btn-bomb, #btn-focus, #stick, #btn-pause, #btn-mute, .toolbar, .chip, .overlay, .touch-actions");
 
     const onDown = (e) => {
       if (this.playLocked) return;

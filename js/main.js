@@ -26,6 +26,26 @@ if (reducedMotion) {
 }
 let lastMode = game.mode;
 
+/* Aba/app oculta mid-jogo: pausa pra não continuar "cego" (ondas, chefe). */
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    /* Continuar na pausa: áudio só volta com resume / Continuar. */
+    return;
+  }
+  try { audio.suspend(); } catch (_) { /* ok */ }
+  if (game.mode === "playing") {
+    try {
+      ui.togglePause();
+    } catch (_) {
+      try {
+        game.pause();
+        input.playLocked = true;
+        input.clearPlay?.();
+      } catch (__) { /* ok */ }
+    }
+  }
+});
+
 function releaseTouch() {
   try {
     const pid = input._aim && input._aim.id;
@@ -59,6 +79,12 @@ function setOverlayMode(on) {
 }
 
 function frame(now) {
+  /* Aba oculta: não simula nem renderiza (dt efetivo = 0). */
+  if (document.hidden) {
+    last = now;
+    requestAnimationFrame(frame);
+    return;
+  }
   const raw = (now - last) / 1000;
   last = now;
   const dt = Math.min(0.05, Math.max(0, raw));

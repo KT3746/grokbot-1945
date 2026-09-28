@@ -156,7 +156,7 @@ export class ThreeRenderer {
       alpha: false,
       powerPreference: this.isLowEnd ? "low-power" : "high-performance",
     });
-    const dprCap = this.lowFx ? 1 : 1.5;
+    const dprCap = this.isLowEnd || this.lowFx ? 1.25 : 1.5;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.shadowMap.enabled = false;
@@ -555,6 +555,8 @@ export class ThreeRenderer {
     const wrap = this.view.parentElement || this.view;
     const w = Math.max(1, wrap.clientWidth || this.view.clientWidth);
     const h = Math.max(1, wrap.clientHeight || this.view.clientHeight);
+    const dprCap = this.isLowEnd || this.lowFx ? 1.25 : 1.5;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     this.renderer.setSize(w, h, false);
     const aspect = w / h;
     const gameAspect = W / H;
