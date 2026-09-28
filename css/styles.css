@@ -165,6 +165,7 @@ body {
   max-width: 100%;
   border-radius: 16px;
   overflow: hidden;
+  touch-action: none;
   box-shadow:
     0 0 0 2px #e0b84a66,
     0 0 36px #e0b84a33,
@@ -190,7 +191,8 @@ body {
   height: 100%;
   image-rendering: pixelated;
   touch-action: none;
-  pointer-events: auto;
+  /* Não come toque do HUD: finger-follow ouve em #board-wrap. */
+  pointer-events: none;
 }
 
 body.renderer-webgl #game {
@@ -607,24 +609,36 @@ button.linkish {
     align-items: flex-end;
     padding-bottom: 4px;
   }
-  /* Fogo +30%; Bomba mais acima (gap maior) */
+  /* Alvos de polegar ≥ ~44pt */
+  .chip {
+    min-width: 48px;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
   #btn-fire {
     width: 88px;
     height: 88px;
+    min-width: 88px;
+    min-height: 88px;
     box-shadow: 0 3px 0 #8a4a10;
     opacity: 0.92;
   }
   #btn-bomb {
-    width: 56px;
-    height: 34px;
-    font: 800 11px/1 Barlow, sans-serif;
+    width: 64px;
+    height: 44px;
+    min-width: 64px;
+    min-height: 44px;
+    font: 800 12px/1 Barlow, sans-serif;
     opacity: 0.92;
     margin-bottom: 8px;
   }
 
   #btn-focus {
     width: 64px;
-    height: 40px;
+    height: 44px;
+    min-width: 64px;
+    min-height: 44px;
     font: 800 12px/1 Barlow, sans-serif;
     opacity: 0.95;
     margin-bottom: 6px;
@@ -700,7 +714,81 @@ body.modal-open #game {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .touch-actions button:active {
+  .touch-actions button:active,
+  .chip:active,
+  button.cta:active,
+  button.ghost:active {
     transform: none;
+    filter: none;
+  }
+}
+
+
+/* Mobile polish: HUD legível em paisagem baixa (~390px de altura) */
+@media (orientation: landscape) and (max-height: 430px) {
+  .topbar {
+    padding: 4px 8px 18px;
+    gap: 4px;
+  }
+  .brand h1 { font-size: 14px; }
+  .tag { font-size: 10px; }
+  .stats {
+    gap: 6px;
+    padding: 4px 8px;
+  }
+  .stat span { font-size: 8px; }
+  .stat strong { font-size: 13px; }
+  .chip {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .touch {
+    padding: 0 6px calc(4px + env(safe-area-inset-bottom));
+  }
+  .touch-actions { gap: 18px; }
+  #btn-fire {
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+    min-height: 72px;
+  }
+  #btn-bomb,
+  #btn-focus {
+    width: 56px;
+    height: 40px;
+    min-width: 56px;
+    min-height: 40px;
+    font-size: 11px;
+  }
+  .boss-bar span { font-size: 11px; }
+  .modal {
+    padding: 14px 14px 12px;
+    max-height: min(92dvh, 360px);
+    overflow: auto;
+  }
+  .modal h2 { font-size: clamp(26px, 7vw, 36px); }
+}
+
+/* Portrait estreito (~390px): evita overflow do HUD */
+@media (orientation: portrait) and (max-width: 430px) {
+  .topbar {
+    grid-template-columns: 1fr auto;
+    gap: 4px;
+    padding: 6px 8px 22px;
+  }
+  .brand h1 { font-size: 15px; }
+  .tag { max-width: 42vw; }
+  .stats {
+    gap: 6px;
+    padding: 4px 7px;
+  }
+  .stat span { font-size: 8px; }
+  .stat strong { font-size: 13px; }
+  .toolbar { gap: 4px; }
+  .chip {
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 12px;
   }
 }

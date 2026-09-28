@@ -92,6 +92,20 @@ export class AudioSys {
     return this.muted;
   }
 
+  /** Aba oculta / pausa: corta o AudioContext pra não vazar pad no fundo. */
+  suspend() {
+    if (this.ctx && this.ctx.state === "running") {
+      try { this.ctx.suspend(); } catch (_) { /* ok */ }
+    }
+  }
+
+  resume() {
+    if (this.muted) return;
+    if (this.ctx && this.ctx.state === "suspended") {
+      try { this.ctx.resume(); } catch (_) { /* ok */ }
+    }
+  }
+
   setIntense(v) {
     this._intense = v;
     if (this._pad && this._pad.f && this.ctx) {
