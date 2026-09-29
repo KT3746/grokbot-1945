@@ -39,8 +39,9 @@ export class Renderer {
     const ctx = this.ctx;
     this.time += 0.016;
     const pal = PAL[game.palette()] || PAL.tropic;
-    const shakeX = (Math.random() - 0.5) * game.fx.shake;
-    const shakeY = (Math.random() - 0.5) * game.fx.shake;
+    const shakeAmt = game.fx.reduced ? 0 : game.fx.shake;
+    const shakeX = (Math.random() - 0.5) * shakeAmt;
+    const shakeY = (Math.random() - 0.5) * shakeAmt;
 
     ctx.imageSmoothingEnabled = false;
     ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -266,6 +266,47 @@ body.renderer-canvas #view3d {
   transition: transform 0.12s linear;
 }
 
+
+/* First-minute onboarding (some após 1º movimento/tiro) */
+.hint-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  transform: translateX(-50%);
+  z-index: 6;
+  font-family: Barlow, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ffe7b3;
+  background: rgba(8, 18, 28, 0.78);
+  border: 1px solid rgba(224, 184, 74, 0.4);
+  padding: 7px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.hint-bar.is-leaving {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+}
+
+/* Score HUD pop */
+.stat strong.score-pop {
+  animation: score-pop 0.38s ease-out;
+  color: #ffe08a !important;
+}
+@keyframes score-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+
 .hidden {
   display: none !important;
 }
@@ -721,6 +762,9 @@ body.modal-open #game {
     transform: none;
     filter: none;
   }
+  .hint-bar { transition: none !important; animation: none !important; }
+  .hint-bar.is-leaving { opacity: 0; transform: translateX(-50%); }
+  .stat strong.score-pop { animation: none !important; color: inherit !important; }
 }
 
 
@@ -768,6 +812,10 @@ body.modal-open #game {
     overflow: auto;
   }
   .modal h2 { font-size: clamp(26px, 7vw, 36px); }
+}
+
+@media (max-width: 720px), (pointer: coarse) {
+  .hint-bar { bottom: 22%; font-size: 0.68rem; padding: 6px 12px; }
 }
 
 /* Portrait estreito (~390px): evita overflow do HUD */

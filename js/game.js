@@ -92,6 +92,7 @@ export class Game {
     this.bombCd = 0;
     this.bombShieldT = 0;
     this.hitStop = 0;
+    this.hintDismissed = false;
     this.player = this._player();
     this.enemies = pool();
     this.pBullets = pool();
@@ -163,6 +164,13 @@ export class Game {
     if (this.mode === "paused") this.mode = "playing";
   }
 
+  /** First-minute: some a dica após 1º movimento ou tiro. */
+  noteFirstAction() {
+    if (this.hintDismissed) return;
+    this.hintDismissed = true;
+    try { this.onFirstAction?.(); } catch (_) { /* ok */ }
+  }
+
   update(dt, input) {
     if (this.mode !== "playing") {
       // pausa/overlays: congela mundo; só deixa FX decair
@@ -223,12 +231,22 @@ export class Game {
         p.x = clamp(p.x + input.moveX * spd * dt, 16, W - 16);
         p.y = clamp(p.y + input.moveY * spd * dt, 40, yMax);
       }
+      /* First-minute: dismiss tip on move (WASD/stick/finger-follow) */
+      if (!this.hintDismissed) {
+        const moved =
+          keyed ||
+          input.aimActive ||
+          Math.abs(input.moveX || 0) > 1e-4 ||
+          Math.abs(input.moveY || 0) > 1e-4;
+        if (moved) this.noteFirstAction();
+      }
       p.invuln = Math.max(0, p.invuln - dt);
       p.rapidT = Math.max(0, p.rapidT - dt);
       p.spreadT = Math.max(0, p.spreadT - dt);
       if (p.spreadT <= 0) p.spread = 1;
       p.fireCd -= dt;
       if (input.fireHeld && p.fireCd <= 0) {
+        this.noteFirstAction();
         this._playerShoot();
         p.fireCd = p.rapidT > 0 ? PLAYER_FIRE_RAPID : PLAYER_FIRE;
         try { this.audio.shoot(); } catch (_) {}
@@ -306,9 +324,9 @@ export class Game {
     try { this.audio.bigBoom(); } catch (_) {}
     this.fx.boom(this.player.x, this.player.y, 36, "#9ad4ff");
     this.fx.boom(this.player.x, this.player.y - 20, 14, "#ffe08a");
-    this.fx.shake = 8;
-    this.fx.flash = Math.max(this.fx.flash, 0.28);
-    this.fx.floatText(this.player.x, this.player.y - 40, "BOMBA!", "#9ad4ff");
+    this.fx.softShake(6);
+    this.fx.softFlash(0.24);
+    this.fx.floatText(this.player.x, this.player.y - 40, "BOMBA!", "#9ad4ff", { pop: true });
     // limpa balas + i-frames pra não perder vida no mesmo instante
     this.eBullets.length = 0;
     this.bombShieldT = 0.55;
@@ -505,9 +523,9 @@ export class Game {
     this.bannerSub = (BOSS_META[id] && BOSS_META[id].subtitle) || "Chefe à frente.";
     this.bannerT = 2.8;
     this.bannerKind = "boss";
-    this.fx.shake = Math.max(this.fx.shake, 6);
-    this.fx.flash = 0.22;
-    this.fx.floatText(W / 2, 120, "ALERTA", "#ff6a4a");
+    this.fx.softShake(5);
+    this.fx.softFlash(0.18);
+    this.fx.floatText(W / 2, 120, "ALERTA", "#ff6a4a", { pop: true });
   }
 
   _updateEnemies(dt) {
@@ -595,7 +613,7 @@ export class Game {
       this.bannerSub = "Sobreviva ao fogo.";
       this.bannerT = 1.6;
       this.bannerKind = "boss";
-      this.fx.shake = Math.max(this.fx.shake, 5);
+      this.fx.softShake(4);
       try { this.audio.warning(); } catch (_) {}
     }
     const sway = (e.kind === "serpente" ? 110 : 88) * (frenzy ? 1.25 : rage ? 1.1 : 1);
@@ -764,9 +782,9 @@ export class Game {
         if (e.dead) continue;
         if (circleHit(b.x, b.y, b.r, e.x, e.y, e.r)) {
           e.hp -= b.dmg;
-          e.flash = 0.12;
+          e.flash = this.fx.reduced ? 0.08 : 0.14;
           hit = true;
-          this.fx.impact(b.x, b.y);
+          this.fx.softHit(b.x, b.y);
           try { this.audio.hit(); } catch (_) {}
           if (e.boss) this.hitStop = Math.max(this.hitStop, 0.05);
           else if (e.hp <= 0) this.hitStop = Math.max(this.hitStop, 0.035);
@@ -824,15 +842,15 @@ export class Game {
       this.comboT = COMBO_WINDOW;
       const pts = scoreKill(e.score, this.combo, this.loop);
       this._addScore(pts);
-      this.fx.floatText(e.x, e.y - 10, `+${pts}`, this.combo > 3 ? "#ff9a4a" : "#ffe08a");
+      this.fx.floatText(e.x, e.y - 10, `+${pts}`, this.combo > 3 ? "#ff9a4a" : "#ffe08a", { pop: true });
       if (this.combo >= 3) {
-        this.fx.floatText(e.x, e.y - 24, `COMBO x${this.combo}`, "#fff");
+        this.fx.floatText(e.x, e.y - 24, `COMBO x${this.combo}`, "#fff", { pop: true });
       }
       if (this.combo === 5 || this.combo === 10 || this.combo === 15 || this.combo === 20) {
         try { this.audio.combo(this.combo); } catch (_) {}
-        this.fx.flash = Math.max(this.fx.flash, 0.18);
-        this.fx.shake = Math.max(this.fx.shake, 4.5);
-        this.fx.floatText(e.x, e.y - 40, this.combo >= 15 ? "INSANO!" : this.combo >= 10 ? "ÉPICO!" : "BOM!", "#ff6a4a");
+        this.fx.softFlash(0.18);
+        this.fx.softShake(4.5);
+        this.fx.floatText(e.x, e.y - 40, this.combo >= 15 ? "INSANO!" : this.combo >= 10 ? "ÉPICO!" : "BOM!", "#ff6a4a", { pop: true });
       }
       // combo high: rajada curta de brinde
       if (this.combo === 8) {
@@ -869,13 +887,13 @@ export class Game {
       // celebração leve (evita bigBoom no mobile)
       this.fx.boom(bx, by, 18, "#e0b84a");
       this.fx.boom(bx - 12, by + 6, 10, "#ff9a4a");
-      this.fx.shake = 9;
-      this.fx.flash = 0.24;
+      this.fx.softShake(7);
+      this.fx.softFlash(0.22);
       try { this.audio.explosion(); this.audio.stage(); } catch (_) {}
       this.mode = "stageclear";
-      this.fx.floatText(W / 2, H * 0.42, "ESTÁGIO LIMPO!", "#ffe08a");
+      this.fx.floatText(W / 2, H * 0.42, "ESTÁGIO LIMPO!", "#ffe08a", { pop: true });
       this.fx.boom(W / 2, H * 0.38, 22, "#e0b84a");
-      this.fx.shake = Math.max(this.fx.shake, 6);
+      this.fx.softShake(5);
       this._saveHigh();
     }
   }
@@ -895,8 +913,8 @@ export class Game {
     try { this.audio.hurt(); } catch (_) {}
     this.fx.playerHurt();
     this.fx.boom(p.x, p.y, 22, "#e85d4c");
-    this.fx.flash = Math.max(this.fx.flash, 0.32);
-    this.fx.floatText(p.x, p.y - 28, "HIT!", "#ff6a4a");
+    this.fx.softFlash(0.28);
+    this.fx.floatText(p.x, p.y - 28, "HIT!", "#ff6a4a", { pop: true });
     p.spread = 1;
     p.spreadT = 0;
     p.rapidT = 0;
@@ -941,6 +959,7 @@ export class Game {
   _addScore(n) {
     const prev = this.score;
     this.score += n;
+    if (n > 0) this.scorePop = true;
     const extra = extraLifeEarned(prev, this.score);
     if (extra) {
       this.lives += extra;
@@ -975,9 +994,9 @@ export class Game {
       this.enemies.length = 0;
       this.fx.reset();
       this.mode = "stageclear";
-      this.fx.floatText(W / 2, H * 0.42, "ESTÁGIO LIMPO!", "#ffe08a");
+      this.fx.floatText(W / 2, H * 0.42, "ESTÁGIO LIMPO!", "#ffe08a", { pop: true });
       this.fx.boom(W / 2, H * 0.38, 22, "#e0b84a");
-      this.fx.shake = Math.max(this.fx.shake, 6);
+      this.fx.softShake(5);
       // sem audio.stage() pesado aqui — UI toca bip leve
       this._saveHigh();
     }
