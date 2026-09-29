@@ -143,6 +143,9 @@ test("versão 1.12.0 first-minute e cache-bust alinhados", () => {
   const particles = readFileSync(join(root, "js/particles.js"), "utf8");
   assert.match(particles, /softShake/);
   assert.match(particles, /softFlash/);
+  const ui = readFileSync(join(root, "js/ui.js"), "utf8");
+  assert.match(ui, /showOnboardingHint/);
+  assert.match(ui, /dismissHint/);
   const three = readFileSync(join(root, "js/vendor/three.module.js"), "utf8");
   assert.match(three, /REVISION = '160'/);
   assert.equal(html.toLowerCase().includes("capcom"), false);

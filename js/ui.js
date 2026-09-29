@@ -264,4 +264,53 @@ export class UI {
       this.els.bossBar.classList.add("hidden");
     }
   }
+
+  _hintCopy() {
+    const touch =
+      !!this.input?.touchEnabled ||
+      (typeof matchMedia !== "undefined" &&
+        matchMedia("(max-width: 720px), (pointer: coarse)").matches);
+    return touch
+      ? "Arraste pra mover · FOGO pra atirar"
+      : "WASD mover · Espaço atirar";
+  }
+
+  showOnboardingHint() {
+    const bar = document.getElementById("hint-bar");
+    if (!bar) return;
+    if (this._hintLeaveTimer) {
+      clearTimeout(this._hintLeaveTimer);
+      this._hintLeaveTimer = null;
+    }
+    bar.textContent = this._hintCopy();
+    bar.classList.remove("is-leaving", "hidden");
+    this._hintActive = true;
+    if (this.game) this.game.hintDismissed = false;
+  }
+
+  dismissHint(immediate) {
+    const bar = document.getElementById("hint-bar");
+    if (!this._hintActive && (!bar || bar.classList.contains("hidden"))) {
+      this._hintActive = false;
+      return;
+    }
+    this._hintActive = false;
+    if (this.game) this.game.hintDismissed = true;
+    if (!bar) return;
+    if (this._hintLeaveTimer) {
+      clearTimeout(this._hintLeaveTimer);
+      this._hintLeaveTimer = null;
+    }
+    if (immediate) {
+      bar.classList.add("hidden");
+      bar.classList.remove("is-leaving");
+      return;
+    }
+    bar.classList.add("is-leaving");
+    this._hintLeaveTimer = setTimeout(() => {
+      bar.classList.add("hidden");
+      bar.classList.remove("is-leaving");
+      this._hintLeaveTimer = null;
+    }, 280);
+  }
 }
