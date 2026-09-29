@@ -25,6 +25,7 @@ export class FX {
   boom(x, y, n = 18, color = "#e8c070") {
     this._cap(90);
     n = Math.min(n, 28);
+    if (this.reduced) n = Math.max(4, Math.floor(n * 0.4));
     // flash central
     this.bits.push({
       x, y, vx: 0, vy: 0,
@@ -97,7 +98,8 @@ export class FX {
 
   impact(x, y) {
     this._cap(80);
-    for (let i = 0; i < 5; i++) {
+    const n = this.reduced ? 3 : 5;
+    for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
       const sp = 40 + Math.random() * 90;
       this.bits.push({
@@ -111,6 +113,27 @@ export class FX {
         kind: "spark",
       });
     }
+  }
+
+  /** Hit flash + soft shake (respeita reduced-motion). */
+  softHit(x, y) {
+    this.impact(x, y);
+    if (this.reduced) {
+      this.flash = Math.max(this.flash, 0.06);
+      return;
+    }
+    this.shake = Math.max(this.shake, 1.6);
+    this.flash = Math.max(this.flash, 0.09);
+  }
+
+  softShake(amt) {
+    if (this.reduced) return;
+    this.shake = Math.max(this.shake, amt);
+  }
+
+  softFlash(amt) {
+    const a = this.reduced ? Math.min(amt, 0.1) : amt;
+    this.flash = Math.max(this.flash, a);
   }
 
   muzzle(x, y) {
@@ -152,13 +175,19 @@ export class FX {
     });
   }
 
-  floatText(x, y, text, color = "#ffe08a") {
-    this.texts.push({ x, y, text, color, life: 0.85, max: 0.85 });
+  floatText(x, y, text, color = "#ffe08a", opts = {}) {
+    const life = opts.life || 0.85;
+    this.texts.push({
+      x, y, text, color,
+      life, max: life,
+      pop: !!opts.pop && !this.reduced,
+    });
   }
 
   playerHurt() {
-    this.shake = 8;
-    this.hurt = 0.35;
+    if (!this.reduced) this.shake = Math.max(this.shake, 6);
+    this.hurt = this.reduced ? 0.18 : 0.35;
+    this.softFlash(0.22);
   }
 
   update(dt) {
@@ -219,11 +248,13 @@ export class FX {
       }
     }
     ctx.globalAlpha = 1;
-    ctx.font = "800 13px Oswald, Barlow, sans-serif";
     ctx.textAlign = "center";
     ctx.lineWidth = 3;
     for (const t of this.texts) {
       const a = Math.max(0, t.life / t.max);
+      const pop = t.pop ? (1 + Math.max(0, (t.life / t.max - 0.55) * 1.15)) : 1;
+      const size = Math.round(13 * pop);
+      ctx.font = `800 ${size}px Oswald, Barlow, sans-serif`;
       ctx.globalAlpha = a;
       ctx.strokeStyle = "#00000088";
       ctx.fillStyle = t.color;

@@ -32,6 +32,10 @@ export class UI {
       pauseBtn: document.getElementById("btn-pause"),
       ver: document.getElementById("ver"),
     };
+    this._hintActive = false;
+    this._hintLeaveTimer = null;
+    this._lastScore = 0;
+    this.game.onFirstAction = () => this.dismissHint(false);
     this._syncVersion();
     this._bind();
     this._syncMute();
@@ -124,7 +128,9 @@ export class UI {
     const q = new URLSearchParams(location.search);
     const st = Number(q.get("stage") || 0);
     this.game.start(Number.isFinite(st) ? st : 0);
+    this._lastScore = 0;
     this.show(null);
+    this.showOnboardingHint();
     this.refresh();
     this._blurChrome();
   }
@@ -133,6 +139,7 @@ export class UI {
     this._lockPlay();
     this.game.mode = "title";
     this.game.resetRun();
+    this.dismissHint(true);
     this.show("title");
     this.refresh();
   }
@@ -183,6 +190,7 @@ export class UI {
   onMode() {
     const m = this.game.mode;
     if (m === "stageclear") {
+      this.dismissHint(true);
       this.input?.clearPlay?.();
       this._lockPlay();
       const looped = this.game.stageIndex === 4;
@@ -216,6 +224,7 @@ export class UI {
       // garante overlay visível mesmo se classe hidden falhar
       if (this.els.stage) this.els.stage.classList.remove("hidden");
     } else if (m === "gameover") {
+      this.dismissHint(true);
       this._lockPlay();
       this.els.overScore.textContent = String(this.game.score);
       this.els.overHigh.textContent = String(this.game.high);
@@ -225,7 +234,16 @@ export class UI {
 
   refresh() {
     const g = this.game;
-    this.els.score.textContent = String(g.score);
+    const scoreEl = this.els.score;
+    const prevScore = this._lastScore;
+    scoreEl.textContent = String(g.score);
+    if ((g.scorePop || g.score > prevScore) && g.mode === "playing" && g.score > 0) {
+      scoreEl.classList.remove("score-pop");
+      void scoreEl.offsetWidth;
+      scoreEl.classList.add("score-pop");
+    }
+    g.scorePop = false;
+    this._lastScore = g.score;
     this.els.high.textContent = String(g.high);
     this.els.lives.textContent = String(Math.max(0, g.lives));
     this.els.bombs.textContent = String(g.bombs);

@@ -115,25 +115,34 @@ test("estágio 1 sem buraco longo entre ondas", () => {
   assert.ok(EMPTY_FILL_SEC <= 3.2);
 });
 
-test("versão 1.11.2 e cache-bust alinhados", () => {
-  assert.equal(VERSION, "1.11.2");
+test("versão 1.12.0 first-minute e cache-bust alinhados", () => {
+  assert.equal(VERSION, "1.12.0");
   assert.match(CACHE_V, /^\d{12}$/);
   const html = readFileSync(join(root, "index.html"), "utf8");
   const css = readFileSync(join(root, "css/styles.css"), "utf8");
   const qs = html.match(/\?v=([0-9]+)/g) || [];
   assert.ok(qs.length >= 3);
   for (const q of qs) assert.equal(q, `?v=${CACHE_V}`);
-  assert.match(html, /id="title-ver">v1\.11\.2</);
-  assert.match(html, /id="ver"[^>]*>v1\.11\.2</);
+  assert.match(html, /id="title-ver">v1\.12\.0</);
+  assert.match(html, /id="ver"[^>]*>v1\.12\.0</);
   assert.match(html, /type="importmap"/);
   assert.match(html, /js\/vendor\/three\.module\.js/);
   assert.match(html, /id="view3d"/);
   assert.match(html, /id="webgl-fail"/);
   assert.match(css, /\.webgl-fail/);
   assert.match(css, /#game\s*\{[^}]*pointer-events:\s*none/s);
+  assert.match(html, /id="hint-bar"/);
+  assert.match(css, /\.hint-bar/);
+  assert.match(css, /score-pop/);
   const main = readFileSync(join(root, "js/main.js"), "utf8");
   assert.match(main, /visibilitychange/);
   assert.match(main, /document\.hidden/);
+  const game = readFileSync(join(root, "js/game.js"), "utf8");
+  assert.match(game, /noteFirstAction/);
+  assert.match(game, /softHit/);
+  const particles = readFileSync(join(root, "js/particles.js"), "utf8");
+  assert.match(particles, /softShake/);
+  assert.match(particles, /softFlash/);
   const three = readFileSync(join(root, "js/vendor/three.module.js"), "utf8");
   assert.match(three, /REVISION = '160'/);
   assert.equal(html.toLowerCase().includes("capcom"), false);
