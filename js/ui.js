@@ -244,10 +244,16 @@ export class UI {
     }
     g.scorePop = false;
     this._lastScore = g.score;
+    // Combo HUD juice (gated by reduced-motion via CSS)
+    scoreEl.classList.toggle("score-combo", g.mode === "playing" && g.combo >= 3);
+    scoreEl.classList.toggle("combo-hot", g.mode === "playing" && g.combo >= 8);
     this.els.high.textContent = String(g.high);
     this.els.lives.textContent = String(Math.max(0, g.lives));
+    this.els.lives.classList.toggle("lives-critical", g.mode === "playing" && g.lives <= 1);
     this.els.bombs.textContent = String(g.bombs);
     this.els.titleHigh.textContent = String(g.high);
+    document.body.classList.toggle("low-hp", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
+    document.getElementById("board-wrap")?.classList.toggle("hp-edge", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
     const meta = STAGE_META[g.stageIndex];
     const loop = g.loop ? ` · ciclo ${g.loop + 1}` : "";
     this.els.chip.textContent =

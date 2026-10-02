@@ -136,6 +136,34 @@ export class FX {
     this.flash = Math.max(this.flash, a);
   }
 
+  /** Anel de combo/multikill (respeita reduced-motion). */
+  comboRing(x, y, tier = 1) {
+    this._cap(90);
+    const hot = tier >= 3;
+    if (this.reduced) {
+      this.bits.push({
+        x, y, vx: 0, vy: 0,
+        life: 0.18, max: 0.18, r: 16 + tier * 2,
+        color: hot ? "#ff6a4a" : "#ffe08a", kind: "ring",
+      });
+      this.flash = Math.max(this.flash, 0.05);
+      return;
+    }
+    this.bits.push({
+      x, y, vx: 0, vy: 0,
+      life: 0.32, max: 0.32, r: 12 + tier * 3,
+      color: hot ? "#ff6a4a" : "#fff6c8", kind: "ring",
+    });
+    this.bits.push({
+      x, y, vx: 0, vy: 0,
+      life: 0.2, max: 0.2, r: 18 + tier * 4,
+      color: hot ? "rgba(255,100,60,0.35)" : "rgba(255,220,120,0.3)", kind: "glow",
+    });
+    this.flash = Math.max(this.flash, hot ? 0.16 : 0.1);
+    this.shake = Math.max(this.shake, hot ? 3.2 : 1.8);
+  }
+
+
   muzzle(x, y) {
     this._cap(90);
     this.bits.push({

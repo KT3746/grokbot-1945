@@ -843,13 +843,21 @@ export class Game {
       const pts = scoreKill(e.score, this.combo, this.loop);
       this._addScore(pts);
       this.fx.floatText(e.x, e.y - 10, `+${pts}`, this.combo > 3 ? "#ff9a4a" : "#ffe08a", { pop: true });
-      if (this.combo >= 3) {
+      if (this.combo === 2) {
+        this.fx.floatText(e.x, e.y - 24, "DUPLA!", "#ffe08a", { pop: true });
+        this.fx.comboRing(e.x, e.y, 1);
+      } else if (this.combo === 3) {
+        this.fx.floatText(e.x, e.y - 24, "TRIO!", "#ffd36a", { pop: true });
+        this.fx.comboRing(e.x, e.y, 2);
+      } else if (this.combo >= 4) {
         this.fx.floatText(e.x, e.y - 24, `COMBO x${this.combo}`, "#fff", { pop: true });
+        if (this.combo % 2 === 0) this.fx.comboRing(e.x, e.y, this.combo >= 10 ? 3 : 2);
       }
       if (this.combo === 5 || this.combo === 10 || this.combo === 15 || this.combo === 20) {
         try { this.audio.combo(this.combo); } catch (_) {}
         this.fx.softFlash(0.18);
         this.fx.softShake(4.5);
+        this.fx.comboRing(e.x, e.y, 3);
         this.fx.floatText(e.x, e.y - 40, this.combo >= 15 ? "INSANO!" : this.combo >= 10 ? "ÉPICO!" : "BOM!", "#ff6a4a", { pop: true });
       }
       // combo high: rajada curta de brinde
