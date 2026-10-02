@@ -52,7 +52,7 @@ Stick à esquerda para voar. **Fogo**, **Bomba** e **Foco** à direita. O primei
 
 - Botão **Som** silencia ou ativa. A escolha fica salva neste aparelho.
 - Efeitos e a música de fundo são tons criados no navegador (Web Audio), sem faixas prontas.
-- O recorde fica no próprio navegador (`localStorage`).
+- O recorde, o **recorde do dia** e os **estágios limpos** ficam no próprio navegador (`localStorage`).
 
 ## Jogar neste computador
 
@@ -92,4 +92,4 @@ npm test
 
 O jogo desenha o céu, o mar e os aviões em **Three.js** (baixo-poli, `FogExp2`), com o arquivo da biblioteca **local** em `js/vendor/` — sem CDN. Os botões, o placar e os toques continuam em HTML. Se o aparelho não tiver WebGL, aparece um aviso em português e o visual clássico em canvas 2D entra no lugar. A lógica (tiros, bombas, chefes, pausa) não muda.
 
-Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.12.1**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).
+Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.12.2**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).

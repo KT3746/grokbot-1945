@@ -21,6 +21,15 @@ export class UI {
       titleHigh: document.getElementById("title-high"),
       overScore: document.getElementById("over-score"),
       overHigh: document.getElementById("over-high"),
+      overDaily: document.getElementById("over-daily"),
+      overRunStages: document.getElementById("over-run-stages"),
+      overDailyBanner: document.getElementById("over-daily-banner"),
+      overEyebrow: document.getElementById("over-eyebrow"),
+      overText: document.getElementById("over-text"),
+      titleDaily: document.getElementById("title-daily"),
+      titleStages: document.getElementById("title-stages"),
+      weapon: document.getElementById("stat-weapon"),
+      stageMeta: document.getElementById("stage-meta"),
       stageH: document.getElementById("stage-h"),
       stageText: document.getElementById("stage-text"),
       stageEyebrow: document.getElementById("stage-eyebrow"),
@@ -214,6 +223,10 @@ export class UI {
       if (this.els.stageScore) {
         this.els.stageScore.textContent = `Pontos: ${this.game.score}`;
       }
+      if (this.els.stageMeta) {
+        this.els.stageMeta.textContent =
+          `Estágios limpos (total): ${this.game.stagesCleared | 0} · Nesta run: ${this.game.runStages | 0}`;
+      }
       const next = document.getElementById("btn-next");
       if (next) {
         next.textContent = this.game.stageIndex === 4 ? "Continuar o ciclo" : "Próximo estágio";
@@ -226,8 +239,26 @@ export class UI {
     } else if (m === "gameover") {
       this.dismissHint(true);
       this._lockPlay();
-      this.els.overScore.textContent = String(this.game.score);
-      this.els.overHigh.textContent = String(this.game.high);
+      const g = this.game;
+      const meta = STAGE_META[g.stageIndex] || STAGE_META[0];
+      this.els.overScore.textContent = String(g.score);
+      this.els.overHigh.textContent = String(g.high);
+      if (this.els.overDaily) this.els.overDaily.textContent = String(g.dailyHigh | 0);
+      if (this.els.overRunStages) this.els.overRunStages.textContent = String(g.runStages | 0);
+      if (this.els.overText) {
+        this.els.overText.textContent =
+          g.runStages > 0
+            ? `Você chegou a ${meta.name} · ${g.runStages} estágio(s) limpo(s) nesta run.`
+            : `O Falcão-Vértice caiu em ${meta.name}.`;
+      }
+      if (this.els.overEyebrow) {
+        this.els.overEyebrow.textContent = g.newDaily ? "Novo marco" : "Mayday";
+      }
+      if (this.els.overDailyBanner) {
+        this.els.overDailyBanner.classList.toggle("hidden", !g.newDaily);
+      }
+      const modal = document.querySelector("#screen-over .modal");
+      if (modal) modal.classList.toggle("over-new-daily", !!g.newDaily);
       this.show("over");
     }
   }
@@ -252,6 +283,15 @@ export class UI {
     this.els.lives.classList.toggle("lives-critical", g.mode === "playing" && g.lives <= 1);
     this.els.bombs.textContent = String(g.bombs);
     this.els.titleHigh.textContent = String(g.high);
+    if (this.els.titleDaily) this.els.titleDaily.textContent = String(g.dailyHigh | 0);
+    if (this.els.titleStages) this.els.titleStages.textContent = String(g.stagesCleared | 0);
+    if (this.els.weapon) {
+      const w = typeof g.weaponLabel === "function" ? g.weaponLabel() : "TIRO";
+      this.els.weapon.textContent = w;
+      this.els.weapon.classList.toggle("weapon-flash", g.mode === "playing" && (g.weaponFlash || 0) > 0);
+      const hot = w === "RAJADA" || w === "LEQUE";
+      this.els.weapon.classList.toggle("weapon-hot", g.mode === "playing" && hot);
+    }
     document.body.classList.toggle("low-hp", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
     document.getElementById("board-wrap")?.classList.toggle("hp-edge", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
     const meta = STAGE_META[g.stageIndex];

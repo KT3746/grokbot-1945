@@ -706,16 +706,20 @@ export class Renderer {
     if (game.bannerT <= 0) return;
     const fade = game.bannerT > 0.45 ? 1 : Math.max(0, game.bannerT / 0.45);
     const boss = game.bannerKind === "boss";
+    const form = game.bannerKind === "form";
     const x = 10;
     const y = 22;
     const w = W - 20;
-    const h = boss ? 72 : 62;
+    const h = boss || form ? 72 : 62;
     ctx.save();
     ctx.globalAlpha = fade;
     const g = ctx.createLinearGradient(x, y, x, y + h);
     if (boss) {
       g.addColorStop(0, "#2a1010ee");
       g.addColorStop(1, "#140808f2");
+    } else if (form) {
+      g.addColorStop(0, "#2a220cee");
+      g.addColorStop(1, "#141008f2");
     } else {
       g.addColorStop(0, "#0c2230ee");
       g.addColorStop(1, "#061018f2");
@@ -723,13 +727,13 @@ export class Renderer {
     ctx.fillStyle = g;
     ctx.fillRect(x, y, w, h);
     // warning stripes (boss) / accent bar (stage)
-    if (boss) {
+    if (boss || form) {
       ctx.save();
       ctx.beginPath();
       ctx.rect(x, y, w, h);
       ctx.clip();
-      ctx.globalAlpha = fade * 0.22;
-      ctx.fillStyle = "#ff6a4a";
+      ctx.globalAlpha = fade * (form ? 0.18 : 0.22);
+      ctx.fillStyle = form ? "#e0b84a" : "#ff6a4a";
       for (let sx = -40; sx < w + 40; sx += 18) {
         ctx.save();
         ctx.translate(x + sx, y);
@@ -740,13 +744,14 @@ export class Renderer {
       ctx.restore();
       ctx.globalAlpha = fade;
       const pulse = 0.55 + Math.sin(this.time * 10) * 0.45;
-      ctx.fillStyle = `rgba(255,106,74,${0.35 + pulse * 0.35})`;
+      const stripe = form ? `rgba(224,184,74,${0.35 + pulse * 0.35})` : `rgba(255,106,74,${0.35 + pulse * 0.35})`;
+      ctx.fillStyle = stripe;
       ctx.fillRect(x, y, w, 3);
       ctx.fillRect(x, y + h - 3, w, 3);
-      ctx.fillStyle = "#ffb0a0";
+      ctx.fillStyle = form ? "#ffe08a" : "#ffb0a0";
       ctx.font = "800 11px Oswald, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("ALERTA", x + 10, y + 16);
+      ctx.fillText(form ? "FORMAÇÃO" : "ALERTA", x + 10, y + 16);
     } else {
       ctx.fillStyle = "#e0b84a";
       ctx.fillRect(x, y, w, 2);
@@ -756,18 +761,18 @@ export class Renderer {
       ctx.fillText("ONDA", x + 10, y + 16);
     }
     ctx.strokeStyle = boss ? "#ff6a4a" : "#e0b84a";
-    ctx.lineWidth = boss ? 3 : 2.5;
+    ctx.lineWidth = boss || form ? 3 : 2.5;
     ctx.shadowColor = boss ? "#ff6a4a88" : "#e0b84a66";
-    ctx.shadowBlur = boss ? 18 : 14;
+    ctx.shadowBlur = boss || form ? 18 : 14;
     ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
     ctx.shadowBlur = 0;
     ctx.fillStyle = boss ? "#ffb0a0" : "#ffe7b3";
     ctx.font = "800 19px Oswald, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(game.banner, W / 2, y + (boss ? 36 : 32));
+    ctx.fillText(game.banner, W / 2, y + (boss || form ? 36 : 32));
     ctx.fillStyle = "#f4f7fa";
     ctx.font = "700 12px Barlow, sans-serif";
-    ctx.fillText(game.bannerSub || "", W / 2, y + (boss ? 56 : 50));
+    ctx.fillText(game.bannerSub || "", W / 2, y + (boss || form ? 56 : 50));
     ctx.restore();
   }
 
