@@ -880,6 +880,7 @@ export class ThreeRenderer {
       ctx.fillStyle = `rgba(200,30,20,${game.fx.hurt * 0.32})`;
       ctx.fillRect(0, 0, W, H);
     }
+    try { this.hud._lowHpEdge(ctx, game); } catch (_) {}
     if (game.player?.invuln > 0 && game.mode === "playing") {
       const pulse = 0.35 + Math.sin(this.time * 14) * 0.2;
       ctx.strokeStyle = `rgba(180,230,255,${pulse})`;

@@ -84,6 +84,7 @@ export class Renderer {
       ctx.fillStyle = `rgba(200,30,20,${game.fx.hurt * 0.35})`;
       ctx.fillRect(0, 0, W, H);
     }
+    try { this._lowHpEdge(ctx, game); } catch (_) {}
     {
       const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.78);
       vg.addColorStop(0, "rgba(0,0,0,0)");
@@ -708,7 +709,7 @@ export class Renderer {
     const x = 10;
     const y = 22;
     const w = W - 20;
-    const h = boss ? 66 : 58;
+    const h = boss ? 72 : 62;
     ctx.save();
     ctx.globalAlpha = fade;
     const g = ctx.createLinearGradient(x, y, x, y + h);
@@ -721,35 +722,111 @@ export class Renderer {
     }
     ctx.fillStyle = g;
     ctx.fillRect(x, y, w, h);
+    // warning stripes (boss) / accent bar (stage)
+    if (boss) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, w, h);
+      ctx.clip();
+      ctx.globalAlpha = fade * 0.22;
+      ctx.fillStyle = "#ff6a4a";
+      for (let sx = -40; sx < w + 40; sx += 18) {
+        ctx.save();
+        ctx.translate(x + sx, y);
+        ctx.rotate(-0.4);
+        ctx.fillRect(0, -10, 8, h + 30);
+        ctx.restore();
+      }
+      ctx.restore();
+      ctx.globalAlpha = fade;
+      const pulse = 0.55 + Math.sin(this.time * 10) * 0.45;
+      ctx.fillStyle = `rgba(255,106,74,${0.35 + pulse * 0.35})`;
+      ctx.fillRect(x, y, w, 3);
+      ctx.fillRect(x, y + h - 3, w, 3);
+      ctx.fillStyle = "#ffb0a0";
+      ctx.font = "800 11px Oswald, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("ALERTA", x + 10, y + 16);
+    } else {
+      ctx.fillStyle = "#e0b84a";
+      ctx.fillRect(x, y, w, 2);
+      ctx.fillStyle = "#ffe7b3";
+      ctx.font = "800 11px Oswald, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("ONDA", x + 10, y + 16);
+    }
     ctx.strokeStyle = boss ? "#ff6a4a" : "#e0b84a";
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = boss ? 3 : 2.5;
     ctx.shadowColor = boss ? "#ff6a4a88" : "#e0b84a66";
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = boss ? 18 : 14;
     ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
     ctx.shadowBlur = 0;
     ctx.fillStyle = boss ? "#ffb0a0" : "#ffe7b3";
     ctx.font = "800 19px Oswald, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(game.banner, W / 2, y + (boss ? 28 : 26));
+    ctx.fillText(game.banner, W / 2, y + (boss ? 36 : 32));
     ctx.fillStyle = "#f4f7fa";
     ctx.font = "700 12px Barlow, sans-serif";
-    ctx.fillText(game.bannerSub || "", W / 2, y + (boss ? 50 : 46));
+    ctx.fillText(game.bannerSub || "", W / 2, y + (boss ? 56 : 50));
+    ctx.restore();
+  }
+
+  /** Borda vermelha quando resta 1 vida (respeita reduced-motion via fx.reduced). */
+  _lowHpEdge(ctx, game) {
+    if (game.mode !== "playing" || !game.player?.alive) return;
+    if ((game.lives | 0) > 1) return;
+    const reduced = !!game.fx?.reduced;
+    const pulse = reduced ? 0.55 : 0.42 + Math.sin(this.time * 5) * 0.22;
+    const a = pulse * 0.55;
+    ctx.save();
+    const edge = ctx.createLinearGradient(0, 0, 0, 28);
+    edge.addColorStop(0, `rgba(200,30,20,${a})`);
+    edge.addColorStop(1, "rgba(200,30,20,0)");
+    ctx.fillStyle = edge;
+    ctx.fillRect(0, 0, W, 28);
+    const edgeB = ctx.createLinearGradient(0, H, 0, H - 28);
+    edgeB.addColorStop(0, `rgba(200,30,20,${a})`);
+    edgeB.addColorStop(1, "rgba(200,30,20,0)");
+    ctx.fillStyle = edgeB;
+    ctx.fillRect(0, H - 28, W, 28);
+    const edgeL = ctx.createLinearGradient(0, 0, 22, 0);
+    edgeL.addColorStop(0, `rgba(200,30,20,${a * 0.85})`);
+    edgeL.addColorStop(1, "rgba(200,30,20,0)");
+    ctx.fillStyle = edgeL;
+    ctx.fillRect(0, 0, 22, H);
+    const edgeR = ctx.createLinearGradient(W, 0, W - 22, 0);
+    edgeR.addColorStop(0, `rgba(200,30,20,${a * 0.85})`);
+    edgeR.addColorStop(1, "rgba(200,30,20,0)");
+    ctx.fillStyle = edgeR;
+    ctx.fillRect(W - 22, 0, 22, H);
     ctx.restore();
   }
 
   _combo(ctx, game) {
     if (game.combo < 2) return;
-    const label = `COMBO x${game.combo}`;
+    const n = game.combo;
+    const label = n === 2 ? "DUPLA x2" : n === 3 ? "TRIO x3" : `COMBO x${n}`;
+    const hot = n >= 10;
+    const mid = n >= 5;
+    const scale = game.fx?.reduced ? 1 : 1 + Math.min(0.18, (n - 2) * 0.012) + Math.sin(this.time * 8) * 0.03;
     ctx.save();
+    ctx.translate(W - 12, 36);
+    ctx.scale(scale, scale);
     ctx.textAlign = "right";
-    ctx.font = "800 15px Oswald, sans-serif";
+    ctx.font = hot ? "800 18px Oswald, sans-serif" : "800 15px Oswald, sans-serif";
     ctx.lineWidth = 4;
     ctx.strokeStyle = "#00000099";
-    ctx.fillStyle = "#ffe08a";
-    ctx.shadowColor = "#e0b84a88";
-    ctx.shadowBlur = 12;
-    ctx.strokeText(label, W - 12, 36);
-    ctx.fillText(label, W - 12, 36);
+    ctx.fillStyle = hot ? "#ff6a4a" : mid ? "#ff9a4a" : "#ffe08a";
+    ctx.shadowColor = hot ? "#ff6a4aaa" : "#e0b84a88";
+    ctx.shadowBlur = hot ? 16 : 12;
+    ctx.strokeText(label, 0, 0);
+    ctx.fillText(label, 0, 0);
+    if (n >= 4 && !game.fx?.reduced) {
+      ctx.shadowBlur = 0;
+      ctx.font = "700 10px Barlow, sans-serif";
+      ctx.fillStyle = "#f4f7facc";
+      ctx.fillText("MULTIKILL", 0, 14);
+    }
     ctx.restore();
   }
 
