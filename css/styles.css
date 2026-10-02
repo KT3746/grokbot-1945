@@ -324,6 +324,69 @@ body.renderer-canvas #view3d {
   text-shadow: 0 0 10px #c81e1488;
 }
 
+
+/* Soft daily / stages meta */
+.meta-line {
+  margin: -6px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.meta-line span {
+  color: var(--brass);
+  font-weight: 800;
+}
+
+/* Weapon HUD clarity */
+.stat-weapon strong {
+  letter-spacing: 0.06em;
+  min-width: 3.2em;
+  display: inline-block;
+}
+.stat-weapon strong.weapon-flash {
+  animation: weapon-flash 0.55s ease-out;
+  color: #ffe08a !important;
+  text-shadow: 0 0 12px #e0b84a99;
+}
+.stat-weapon strong.weapon-hot {
+  color: #ff9a4a;
+  text-shadow: 0 0 8px #ff6a4a66;
+}
+@keyframes weapon-flash {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.28); filter: brightness(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* Game-over polish */
+.over-badge {
+  margin: 0 0 4px;
+  font-family: Oswald, sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: #ffb0a0;
+}
+.over-modal.over-new-daily {
+  box-shadow: 0 0 0 1px #e0b84a66, 0 12px 40px #e0b84a22;
+}
+.over-daily-banner {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #e0b84a33, #ff9a4a22);
+  border: 1px solid #e0b84a66;
+  color: #ffe08a;
+  font-weight: 800;
+  font-size: 14px;
+  animation: over-daily-pulse 1.4s ease-in-out infinite;
+}
+@keyframes over-daily-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12); }
+}
+
 /* Low-HP screen edge (DOM assist; canvas also draws tint) */
 #board-wrap.hp-edge::after {
   content: "";
@@ -877,6 +940,8 @@ body.modal-open #game {
     filter: none;
   }
   .hint-bar { transition: none !important; animation: none !important; }
+  .stat-weapon strong.weapon-flash,
+  .over-daily-banner { animation: none !important; }
   .hint-bar.is-leaving { opacity: 0; transform: translateX(-50%); }
   .stat strong.score-pop { animation: none !important; color: inherit !important; text-shadow: none !important; }
   .stat strong.combo-hot { animation: none !important; }

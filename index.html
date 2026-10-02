@@ -13,15 +13,15 @@
     <meta property="og:description" content="Arcade vertical premium. Domine o céu. Sobreviva às ondas." />
     <meta property="og:type" content="website" />
     <title>1945</title>
-    <link rel="icon" href="assets/favicon.svg?v=202610012318" type="image/svg+xml" />
+    <link rel="icon" href="assets/favicon.svg?v=202610020153" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/styles.css?v=202610012318" />
+    <link rel="stylesheet" href="css/styles.css?v=202610020153" />
     <script type="importmap">
     {
       "imports": {
-        "three": "./js/vendor/three.module.js?v=202610012318"
+        "three": "./js/vendor/three.module.js?v=202610020153"
       }
     }
     </script>
@@ -53,6 +53,10 @@
             <div class="stat">
               <span>Bombas</span>
               <strong id="stat-bombs">2</strong>
+            </div>
+            <div class="stat stat-weapon">
+              <span>Arma</span>
+              <strong id="stat-weapon">TIRO</strong>
             </div>
           </div>
           <div class="toolbar">
@@ -95,7 +99,7 @@
 
     <div id="screen-title" class="overlay" role="dialog" aria-modal="true" aria-labelledby="title-h">
       <div class="modal">
-        <p class="eyebrow">1945 · <span id="title-ver">v1.12.1</span></p>
+        <p class="eyebrow">1945 · <span id="title-ver">v1.12.2</span></p>
         <h2 id="title-h">1945</h2>
         <p class="tagline">Arcade premium · vista de cima · PC e celular</p>
         <p class="tagline subtag">Domine o céu. Sobreviva às ondas.</p>
@@ -104,6 +108,7 @@
           Você pilota o <strong>Falcão-Vértice</strong> — o último caça da esquadrilha.
         </p>
         <p class="record">Melhor pontuação: <span id="title-high">0</span></p>
+        <p class="meta-line" id="title-meta">Hoje: <span id="title-daily">0</span> · Estágios limpos: <span id="title-stages">0</span></p>
         <div class="row">
           <button type="button" id="btn-play" class="cta">Jogar</button>
           <button type="button" id="btn-howto" class="ghost">Como jogar</button>
@@ -153,25 +158,29 @@
         <h2 id="stage-h">Vitória de estágio</h2>
         <p class="tagline" id="stage-text">O horizonte se abre.</p>
         <p class="record" id="stage-score"></p>
+        <p class="meta-line" id="stage-meta"></p>
         <button type="button" id="btn-next" class="cta">Próximo estágio</button>
       </div>
     </div>
 
     <div id="screen-over" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="over-h">
-      <div class="modal">
-        <p class="eyebrow">Mayday</p>
+      <div class="modal over-modal">
+        <p class="eyebrow" id="over-eyebrow">Mayday</p>
+        <p class="over-badge" aria-hidden="true">FIM DE JOGO</p>
         <h2 id="over-h">Fim de jogo</h2>
         <p class="tagline" id="over-text">O Falcão-Vértice caiu no Mar de Vidro.</p>
         <p class="record">Pontos: <span id="over-score">0</span></p>
         <p class="tagline">Recorde: <span id="over-high">0</span></p>
+        <p class="meta-line" id="over-meta">Hoje: <span id="over-daily">0</span> · Nesta run: <span id="over-run-stages">0</span> estágio(s)</p>
+        <p class="over-daily-banner hidden" id="over-daily-banner">Novo recorde do dia!</p>
         <div class="row">
-          <button type="button" id="btn-again" class="cta">Tentar de novo</button>
+          <button type="button" id="btn-again" class="cta">Continuar voando</button>
           <button type="button" id="btn-over-menu" class="ghost">Título</button>
         </div>
       </div>
     </div>
 
-    <div id="ver" class="foot">v1.12.1</div>
-    <script type="module" src="js/main.js?v=202610012318"></script>
+    <div id="ver" class="foot">v1.12.2</div>
+    <script type="module" src="js/main.js?v=202610020153"></script>
   </body>
 </html>

@@ -115,16 +115,16 @@ test("estágio 1 sem buraco longo entre ondas", () => {
   assert.ok(EMPTY_FILL_SEC <= 3.2);
 });
 
-test("versão 1.12.1 polish-3 e cache-bust alinhados", () => {
-  assert.equal(VERSION, "1.12.1");
+test("versão 1.12.2 wave-2 e cache-bust alinhados", () => {
+  assert.equal(VERSION, "1.12.2");
   assert.match(CACHE_V, /^\d{12}$/);
   const html = readFileSync(join(root, "index.html"), "utf8");
   const css = readFileSync(join(root, "css/styles.css"), "utf8");
   const qs = html.match(/\?v=([0-9]+)/g) || [];
   assert.ok(qs.length >= 3);
   for (const q of qs) assert.equal(q, `?v=${CACHE_V}`);
-  assert.match(html, /id="title-ver">v1\.12\.1</);
-  assert.match(html, /id="ver"[^>]*>v1\.12\.1</);
+  assert.match(html, /id="title-ver">v1\.12\.2</);
+  assert.match(html, /id="ver"[^>]*>v1\.12\.2</);
   assert.match(html, /type="importmap"/);
   assert.match(html, /js\/vendor\/three\.module\.js/);
   assert.match(html, /id="view3d"/);
@@ -154,6 +154,21 @@ test("versão 1.12.1 polish-3 e cache-bust alinhados", () => {
   const ui = readFileSync(join(root, "js/ui.js"), "utf8");
   assert.match(ui, /showOnboardingHint/);
   assert.match(ui, /dismissHint/);
+  // wave-2: daily meta, weapon chip, formation telegraph, over polish
+  assert.match(html, /id="title-daily"/);
+  assert.match(html, /id="title-stages"/);
+  assert.match(html, /id="stat-weapon"/);
+  assert.match(html, /id="over-daily"/);
+  assert.match(html, /id="over-daily-banner"/);
+  assert.match(css, /meta-line/);
+  assert.match(css, /weapon-flash/);
+  assert.match(css, /over-daily-banner/);
+  assert.match(game, /_maybeFormTelegraph/);
+  assert.match(game, /_onStageCleared/);
+  assert.match(game, /STORAGE_DAILY|ceu-de-aco-diario/);
+  assert.match(game, /weaponLabel/);
+  assert.match(renderSrc, /FORMAÇÃO/);
+  assert.match(ui, /title-daily|titleDaily/);
   const three = readFileSync(join(root, "js/vendor/three.module.js"), "utf8");
   assert.match(three, /REVISION = '160'/);
   assert.equal(html.toLowerCase().includes("capcom"), false);

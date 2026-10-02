@@ -21,6 +21,7 @@ import {
   extraLifeEarned,
   PICKUPS,
   WEAPON_DROPS,
+  PICKUP_LABEL,
   STAGE_META,
   BOSS_NAMES,
   BOSS_META,
@@ -37,7 +38,7 @@ import {
 } from "./core.js";
 import { STAGES } from "./stages.js";
 import { FX } from "./particles.js";
-import { STORAGE_HIGH } from "./version.js";
+import { STORAGE_HIGH, STORAGE_DAILY, STORAGE_STAGES } from "./version.js";
 
 const KIND = {
   vespa: { hp: 2, r: 14, speed: 72, score: 120, fire: 2.6, shot: "down" },
@@ -66,7 +67,62 @@ export class Game {
     this.fx = new FX();
     this.mode = "title";
     this.high = Number(localStorage.getItem(STORAGE_HIGH) || 0);
+    this.stagesCleared = Number(localStorage.getItem(STORAGE_STAGES) || 0);
+    this._loadDaily();
     this.resetRun();
+  }
+
+  /** Data BRT YYYY-MM-DD para recorde diário suave. */
+  _brtDate() {
+    try {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+    } catch (_) {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+  }
+
+  _loadDaily() {
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(STORAGE_DAILY) || "null"); } catch (_) { raw = null; }
+    const today = this._brtDate();
+    if (!raw || raw.date !== today) {
+      this.dailyHigh = 0;
+      this.dailyDate = today;
+      this._saveDaily();
+    } else {
+      this.dailyHigh = Number(raw.high || 0);
+      this.dailyDate = raw.date;
+    }
+  }
+
+  _saveDaily() {
+    try {
+      localStorage.setItem(
+        STORAGE_DAILY,
+        JSON.stringify({ date: this.dailyDate || this._brtDate(), high: this.dailyHigh | 0 })
+      );
+    } catch (_) {}
+  }
+
+  _saveStages() {
+    try {
+      localStorage.setItem(STORAGE_STAGES, String(this.stagesCleared | 0));
+    } catch (_) {}
+  }
+
+  weaponLabel() {
+    const p = this.player;
+    if (!p) return "TIRO";
+    if (p.rapidT > 0.15) return "RAJADA";
+    if (p.spreadT > 0.15 && p.spread >= 3) return "LEQUE";
+    if (p.spread >= 3) return "TIRO+";
+    return "TIRO";
   }
 
   resetRun() {
@@ -93,6 +149,10 @@ export class Game {
     this.bombShieldT = 0;
     this.hitStop = 0;
     this.hintDismissed = false;
+    this.runStages = 0;
+    this.weaponFlash = 0;
+    this.lastWeapon = "TIRO";
+    this.newDaily = false;
     this.player = this._player();
     this.enemies = pool();
     this.pBullets = pool();
@@ -257,6 +317,7 @@ export class Game {
 
     this.comboT -= dt;
     if (this.comboT <= 0) this.combo = 0;
+    if (this.weaponFlash > 0) this.weaponFlash -= dt;
 
     this._director(dt);
     this._updateEnemies(dt);
@@ -384,6 +445,7 @@ export class Game {
 
   _spawnEvent(ev) {
     const diff = 1 + this.stageIndex * 0.08 + this.loop * 0.22;
+    this._maybeFormTelegraph(ev);
     if (ev.spawn === "line") {
       for (let i = 0; i < ev.n; i++) {
         this._enemy(ev.kind, ev.x0 + i * ev.gap, -18 - i * 10, ev.pattern, diff, i);
@@ -441,7 +503,31 @@ export class Game {
     }
   }
 
-  _enemy(kind, x, y, pattern, diff, phase, extra = {}) {
+  /** Aviso curto de formação (parede / V / pinça / chuva densa). */
+  _maybeFormTelegraph(ev) {
+    const heavy = ev.spawn === "wall" || ev.spawn === "v" || ev.spawn === "pinch"
+      || (ev.spawn === "rain" && (ev.n | 0) >= 8)
+      || (ev.spawn === "swoop" && (ev.n | 0) >= 4);
+    if (!heavy) return;
+    // Não atropela banner de chefe / estágio fresco
+    if (this.bannerKind === "boss" && this.bannerT > 0.8) return;
+    if (this.bannerKind === "stage" && this.bannerT > 1.2) return;
+    const kind = ev.kind || "vespa";
+    const names = {
+      bufalo: "Búfalos em linha",
+      gaviao: "Gaviões em mergulho",
+      artilheiro: "Artilharia em grade",
+      vespa: "Vespas em formação",
+      as: "Ases no horizonte",
+    };
+    this.banner = "FORMAÇÃO!";
+    this.bannerSub = names[kind] || "Inimigos em formação — abre espaço.";
+    this.bannerT = Math.max(this.bannerT, 1.35);
+    this.bannerKind = "form";
+    try { this.fx.softFlash(0.12); } catch (_) {}
+  }
+
+    _enemy(kind, x, y, pattern, diff, phase, extra = {}) {
     const k = KIND[kind];
     const e = {
       kind,
@@ -902,7 +988,7 @@ export class Game {
       this.fx.floatText(W / 2, H * 0.42, "ESTÁGIO LIMPO!", "#ffe08a", { pop: true });
       this.fx.boom(W / 2, H * 0.38, 22, "#e0b84a");
       this.fx.softShake(5);
-      this._saveHigh();
+      this._onStageCleared();
     }
   }
 
@@ -939,28 +1025,44 @@ export class Game {
 
   _applyPickup(kind, x, y) {
     const p = this.player;
+    const prevW = this.weaponLabel();
     try { this.audio.pickup(); } catch (_) {}
-    this.fx.boom(x, y, 8, "#9ad4ff");
+    this.fx.boom(x, y, 12, "#9ad4ff");
+    this.fx.comboRing(x, y, kind === "rapid" || kind === "spread" ? 2 : 1);
+    this.fx.softFlash(0.14);
+    const label = PICKUP_LABEL[kind] || kind.toUpperCase();
     if (kind === "shot") {
       p.spread = Math.min(MAX_SPREAD, p.spread + 2);
       p.spreadT = Math.max(p.spreadT, 14);
-      this.fx.floatText(x, y, "TIRO+", "#ffe08a");
+      this.fx.floatText(x, y - 8, "TIRO+", "#ffe08a", { pop: true });
+      this.fx.floatText(x, y - 26, "arma reforçada", "#ffe7b3");
     } else if (kind === "spread") {
       p.spread = Math.min(MAX_SPREAD, p.spread + 2);
       p.spreadT = 14;
-      this.fx.floatText(x, y, "LEQUE", "#ffd36a");
+      this.fx.floatText(x, y - 8, "LEQUE", "#ffd36a", { pop: true });
+      this.fx.floatText(x, y - 26, "tiro em leque!", "#ffe7b3");
     } else if (kind === "rapid") {
       p.rapidT = 10;
-      this.fx.floatText(x, y, "RAJADA", "#ff9a4a");
+      this.fx.floatText(x, y - 8, "RAJADA", "#ff9a4a", { pop: true });
+      this.fx.floatText(x, y - 26, "cadência alta!", "#ffc8a0");
     } else if (kind === "shield") {
       p.shield = Math.min(3, p.shield + 1);
-      this.fx.floatText(x, y, "ESCUDO", "#9ad4ff");
+      this.fx.floatText(x, y - 8, "ESCUDO", "#9ad4ff", { pop: true });
     } else if (kind === "bomb") {
       this.bombs = Math.min(MAX_BOMBS, this.bombs + 1);
-      this.fx.floatText(x, y, "+", "#9ad4ff");
+      this.fx.floatText(x, y - 8, "BOMBA +1", "#9ad4ff", { pop: true });
     } else {
       this._addScore(1000);
-      this.fx.floatText(x, y, "+1000", "#ffe08a");
+      this.fx.floatText(x, y - 8, "+1000", "#ffe08a", { pop: true });
+    }
+    void label;
+    const nextW = this.weaponLabel();
+    if (nextW !== prevW && (kind === "shot" || kind === "spread" || kind === "rapid")) {
+      this.weaponFlash = 1.4;
+      this.lastWeapon = nextW;
+      this.fx.floatText(p.x, p.y - 48, `ARMA: ${nextW}`, "#fff6c8", { pop: true });
+    } else {
+      this.lastWeapon = nextW;
     }
   }
 
@@ -981,7 +1083,29 @@ export class Game {
   }
 
   _saveHigh() {
-    localStorage.setItem(STORAGE_HIGH, String(this.high | 0));
+    try { localStorage.setItem(STORAGE_HIGH, String(this.high | 0)); } catch (_) {}
+    this._touchDaily();
+  }
+
+  _touchDaily() {
+    const today = this._brtDate();
+    if (this.dailyDate !== today) {
+      this.dailyDate = today;
+      this.dailyHigh = 0;
+      this.newDaily = false;
+    }
+    if (this.score > this.dailyHigh) {
+      this.dailyHigh = this.score;
+      this.newDaily = true;
+      this._saveDaily();
+    }
+  }
+
+  _onStageCleared() {
+    this.runStages = (this.runStages | 0) + 1;
+    this.stagesCleared = (this.stagesCleared | 0) + 1;
+    this._saveStages();
+    this._saveHigh();
   }
 
   _checkStage() {
@@ -1006,7 +1130,7 @@ export class Game {
       this.fx.boom(W / 2, H * 0.38, 22, "#e0b84a");
       this.fx.softShake(5);
       // sem audio.stage() pesado aqui — UI toca bip leve
-      this._saveHigh();
+      this._onStageCleared();
     }
   }
 
