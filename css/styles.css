@@ -1023,3 +1023,91 @@ body.modal-open #game {
     font-size: 12px;
   }
 }
+
+/* ===== Onda 3 (v1.13.0): auto-fire, bomba com contador, timer de arma ===== */
+.stat-weapon { position: relative; }
+.weapon-timer {
+  display: block;
+  height: 3px;
+  margin-top: 3px;
+  border-radius: 2px;
+  background: #ffffff1a;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.weapon-timer.on { opacity: 1; }
+.weapon-timer b {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, #ff9a4a, #ffe08a);
+  box-shadow: 0 0 6px #ffb45a99;
+}
+.weapon-timer.ending b {
+  background: #ff6a4a;
+  animation: wt-blink 0.32s steps(2, start) infinite;
+}
+@keyframes wt-blink { 50% { opacity: 0.25; } }
+
+#btn-bomb { position: relative; overflow: visible; }
+.bomb-count {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  font: 800 12px/1 Barlow, sans-serif;
+  letter-spacing: 0;
+  color: #fff;
+  background: #1a3a68;
+  border: 2px solid #9ad4ff;
+  box-shadow: 0 2px 6px #0008;
+  pointer-events: none;
+}
+#btn-bomb.bomb-empty {
+  filter: grayscale(0.9) brightness(0.7);
+  opacity: 0.55 !important;
+}
+#btn-bomb.bomb-empty .bomb-count { background: #5a1a1a; border-color: #ff6a4a; }
+#btn-bomb.bomb-cd { filter: brightness(0.75); }
+#btn-bomb.bomb-gain .bomb-count { animation: bomb-gain 0.6s ease-out 2; }
+@keyframes bomb-gain {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5); background: #9ad4ff; color: #1a1208; }
+  100% { transform: scale(1); }
+}
+
+#btn-fire { position: relative; }
+.fire-auto-tag {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  font: 800 9px/1 Barlow, sans-serif;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+  pointer-events: none;
+}
+#btn-fire.fire-touch .fire-auto-tag { display: block; }
+#btn-fire.fire-auto {
+  box-shadow: 0 3px 0 #8a4a10, 0 0 0 4px #ffe08a66, 0 0 22px #ffb45acc;
+  animation: fire-auto-pulse 0.5s ease-in-out infinite alternate;
+}
+#btn-fire.fire-auto .fire-auto-tag { opacity: 1; }
+@keyframes fire-auto-pulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #btn-fire.fire-auto,
+  #btn-bomb.bomb-gain .bomb-count,
+  .weapon-timer.ending b { animation: none !important; }
+}

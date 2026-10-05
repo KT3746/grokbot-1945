@@ -129,3 +129,22 @@ test("intro do estágio 1 dá um pouco mais de invuln", () => {
   assert.ok(game.player.invuln >= 2.8);
   assert.ok(game.introT >= 2.8);
 });
+
+test("weaponTimer e haptic: barra do power-up e vibração em hit", async () => {
+  const g = new Game(silentAudio());
+  g.start(0);
+  assert.equal(g.weaponTimer(), 0);
+  g.player.rapidT = 5;
+  assert.ok(Math.abs(g.weaponTimer() - 0.5) < 1e-9);
+  const buzz = [];
+  g.haptic = (p) => buzz.push(p);
+  g.player.rapidT = 0;
+  g.player.invuln = 0;
+  g.player.shield = 0;
+  g._playerHit();
+  assert.ok(buzz.length >= 1);
+  const before = g.bombs;
+  g._applyPickup("bomb", 100, 100);
+  assert.ok(g.bombs >= before);
+  assert.ok(g.bombGain > 0);
+});

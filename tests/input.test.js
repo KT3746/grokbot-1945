@@ -78,3 +78,37 @@ test("toque no canvas liga finger-follow absoluto", () => {
   assert.equal(input.aimActive, false);
   assert.equal(input.aimAbsOn, false);
 });
+
+test("dedo no céu = tiro automático; mouse não", () => {
+  const canvas = installAimDom();
+  const input = new Input();
+  input.poll();
+  assert.equal(input.fireHeld, false);
+  canvas.dispatch("pointerdown", pointerEvent({ pointerType: "mouse" }));
+  input.poll();
+  assert.equal(input.fireHeld, false);
+  canvas.dispatch(
+    "pointerdown",
+    pointerEvent({ pointerType: "touch", pointerId: 9, clientX: 150, clientY: 420 })
+  );
+  input.poll();
+  assert.equal(input.autoFiring, true);
+  assert.equal(input.fireHeld, true);
+  canvas.dispatch("pointerup", pointerEvent({ pointerType: "touch", pointerId: 9 }));
+  input.poll();
+  assert.equal(input.autoFiring, false);
+  assert.equal(input.fireHeld, false);
+});
+
+test("auto-fire desliga com playLocked (pausa/overlay)", () => {
+  const canvas = installAimDom();
+  const input = new Input();
+  canvas.dispatch(
+    "pointerdown",
+    pointerEvent({ pointerType: "touch", pointerId: 3, clientX: 150, clientY: 420 })
+  );
+  input.playLocked = true;
+  input.poll();
+  assert.equal(input.autoFiring, false);
+  assert.equal(input.fireHeld, false);
+});

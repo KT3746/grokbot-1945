@@ -26,6 +26,13 @@ if (reducedMotion) {
 }
 let lastMode = game.mode;
 
+/* Vibração curta (Android): só depois de toque real, nunca com reduced-motion. */
+game.haptic = (pattern) => {
+  if (reducedMotion || !input.touchEnabled) return;
+  if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
+  try { navigator.vibrate(pattern); } catch (_) { /* ok */ }
+};
+
 /* Aba/app oculta mid-jogo: pausa pra não continuar "cego" (ondas, chefe). */
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
