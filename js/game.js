@@ -151,6 +151,7 @@ export class Game {
     this.hintDismissed = false;
     this.runStages = 0;
     this.weaponFlash = 0;
+    this.bombGain = 0;
     this.lastWeapon = "TIRO";
     this.newDaily = false;
     this.player = this._player();
@@ -222,6 +223,20 @@ export class Game {
 
   resume() {
     if (this.mode === "paused") this.mode = "playing";
+  }
+
+  /** Vibração curta no celular (main.js liga game.haptic). */
+  _buzz(pattern) {
+    try { this.haptic?.(pattern); } catch (_) { /* ok */ }
+  }
+
+  /** Fração restante do power-up de arma (0..1) para a barrinha do HUD. */
+  weaponTimer() {
+    const p = this.player;
+    if (!p) return 0;
+    if (p.rapidT > 0.15) return Math.min(1, p.rapidT / 10);
+    if (p.spreadT > 0.15 && p.spread >= 3) return Math.min(1, p.spreadT / 14);
+    return 0;
   }
 
   /** First-minute: some a dica após 1º movimento ou tiro. */
@@ -318,6 +333,7 @@ export class Game {
     this.comboT -= dt;
     if (this.comboT <= 0) this.combo = 0;
     if (this.weaponFlash > 0) this.weaponFlash -= dt;
+    if (this.bombGain > 0) this.bombGain -= dt;
 
     this._director(dt);
     this._updateEnemies(dt);
@@ -382,6 +398,7 @@ export class Game {
     if (this.bombs <= 0 || !this.player.alive || this.bombCd > 0) return;
     this.bombs--;
     this.bombCd = BOMB_COOLDOWN;
+    this._buzz(45);
     try { this.audio.bigBoom(); } catch (_) {}
     this.fx.boom(this.player.x, this.player.y, 36, "#9ad4ff");
     this.fx.boom(this.player.x, this.player.y - 20, 14, "#ffe08a");
@@ -609,6 +626,7 @@ export class Game {
     this.bannerSub = (BOSS_META[id] && BOSS_META[id].subtitle) || "Chefe à frente.";
     this.bannerT = 2.8;
     this.bannerKind = "boss";
+    this._buzz([30, 60, 30]);
     this.fx.softShake(5);
     this.fx.softFlash(0.18);
     this.fx.floatText(W / 2, 120, "ALERTA", "#ff6a4a", { pop: true });
@@ -941,6 +959,7 @@ export class Game {
       }
       if (this.combo === 5 || this.combo === 10 || this.combo === 15 || this.combo === 20) {
         try { this.audio.combo(this.combo); } catch (_) {}
+        this._buzz(18);
         this.fx.softFlash(0.18);
         this.fx.softShake(4.5);
         this.fx.comboRing(e.x, e.y, 3);
@@ -983,6 +1002,7 @@ export class Game {
       this.fx.boom(bx - 12, by + 6, 10, "#ff9a4a");
       this.fx.softShake(7);
       this.fx.softFlash(0.22);
+      this._buzz([40, 40, 90]);
       try { this.audio.explosion(); this.audio.stage(); } catch (_) {}
       this.mode = "stageclear";
       this.fx.floatText(W / 2, H * 0.42, "ESTÁGIO LIMPO!", "#ffe08a", { pop: true });
@@ -1001,9 +1021,11 @@ export class Game {
       this.fx.boom(p.x, p.y, 10, "#9ad4ff");
       try { this.audio.hit(); } catch (_) {}
       this.fx.floatText(p.x, p.y - 16, "ESCUDO", "#9ad4ff");
+      this._buzz(25);
       return;
     }
     this.lives--;
+    this._buzz([60, 40, 60]);
     try { this.audio.hurt(); } catch (_) {}
     this.fx.playerHurt();
     this.fx.boom(p.x, p.y, 22, "#e85d4c");
@@ -1027,6 +1049,7 @@ export class Game {
     const p = this.player;
     const prevW = this.weaponLabel();
     try { this.audio.pickup(); } catch (_) {}
+    this._buzz(12);
     this.fx.boom(x, y, 12, "#9ad4ff");
     this.fx.comboRing(x, y, kind === "rapid" || kind === "spread" ? 2 : 1);
     this.fx.softFlash(0.14);
@@ -1050,6 +1073,7 @@ export class Game {
       this.fx.floatText(x, y - 8, "ESCUDO", "#9ad4ff", { pop: true });
     } else if (kind === "bomb") {
       this.bombs = Math.min(MAX_BOMBS, this.bombs + 1);
+      this.bombGain = 1.2;
       this.fx.floatText(x, y - 8, "BOMBA +1", "#9ad4ff", { pop: true });
     } else {
       this._addScore(1000);

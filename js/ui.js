@@ -40,6 +40,11 @@ export class UI {
       mute: document.getElementById("btn-mute"),
       pauseBtn: document.getElementById("btn-pause"),
       ver: document.getElementById("ver"),
+      weaponTimer: document.getElementById("weapon-timer"),
+      weaponTimerFill: document.getElementById("weapon-timer-fill"),
+      bombBtn: document.getElementById("btn-bomb"),
+      bombCount: document.getElementById("bomb-count"),
+      fireBtn: document.getElementById("btn-fire"),
     };
     this._hintActive = false;
     this._hintLeaveTimer = null;
@@ -292,6 +297,28 @@ export class UI {
       const hot = w === "RAJADA" || w === "LEQUE";
       this.els.weapon.classList.toggle("weapon-hot", g.mode === "playing" && hot);
     }
+    // Barrinha de tempo do power-up (some quando volta ao TIRO normal)
+    if (this.els.weaponTimer && this.els.weaponTimerFill) {
+      const r = typeof g.weaponTimer === "function" && g.mode !== "title" ? g.weaponTimer() : 0;
+      this.els.weaponTimer.classList.toggle("on", r > 0);
+      this.els.weaponTimer.classList.toggle("ending", r > 0 && r < 0.25);
+      this.els.weaponTimerFill.style.transform = `scaleX(${r})`;
+    }
+    // Botão Bomba: contador + estado vazio / recarga
+    if (this.els.bombCount) this.els.bombCount.textContent = String(Math.max(0, g.bombs | 0));
+    if (this.els.bombBtn) {
+      const empty = (g.bombs | 0) <= 0;
+      this.els.bombBtn.classList.toggle("bomb-empty", empty);
+      this.els.bombBtn.classList.toggle("bomb-cd", !empty && (g.bombCd || 0) > 0);
+      this.els.bombBtn.classList.toggle("bomb-gain", (g.bombGain || 0) > 0);
+      this.els.bombBtn.setAttribute("aria-label", empty ? "Bomba (sem bombas)" : `Bomba (${g.bombs | 0})`);
+    }
+    // Botão Fogo acende quando o dedo no céu está atirando sozinho
+    if (this.els.fireBtn) {
+      const touch = !!this.input?.touchEnabled;
+      this.els.fireBtn.classList.toggle("fire-touch", touch);
+      this.els.fireBtn.classList.toggle("fire-auto", g.mode === "playing" && !!this.input?.autoFiring);
+    }
     document.body.classList.toggle("low-hp", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
     document.getElementById("board-wrap")?.classList.toggle("hp-edge", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
     const meta = STAGE_META[g.stageIndex];
@@ -317,7 +344,7 @@ export class UI {
       (typeof matchMedia !== "undefined" &&
         matchMedia("(max-width: 720px), (pointer: coarse)").matches);
     return touch
-      ? "Arraste pra mover · FOGO pra atirar"
+      ? "Arraste pra voar · o tiro é automático"
       : "WASD mover · Espaço atirar";
   }
 

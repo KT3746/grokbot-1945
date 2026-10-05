@@ -39,6 +39,9 @@ export class Input {
     this._bombBtn = false;
     this._focusBtn = false;
     this.playLocked = false;
+    /** Celular: dedo arrastando no céu = tiro automático (sem segurar FOGO). */
+    this.autoFire = true;
+    this.autoFiring = false;
 
     window.addEventListener("keydown", (e) => this._down(e), true);
     window.addEventListener("keyup", (e) => this._up(e), true);
@@ -364,6 +367,7 @@ export class Input {
       this._fireBtn = false;
       this._bombBtn = false;
       this._focusBtn = false;
+      this.autoFiring = false;
       return;
     }
     let x = 0;
@@ -383,7 +387,10 @@ export class Input {
     }
     this.moveX = x;
     this.moveY = y;
+    this.autoFiring =
+      !!this.autoFire && this._aim.active && this.aimActive && this.touchEnabled;
     this.fireHeld =
+      this.autoFiring ||
       this._fireBtn ||
       this._keys.has("Space") ||
       this._keys.has("KeyZ");
