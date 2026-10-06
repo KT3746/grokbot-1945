@@ -126,6 +126,34 @@ export class FX {
     this.flash = Math.max(this.flash, 0.09);
   }
 
+  /** Faíscas de rasante (tiro quase acertou). */
+  graze(x, y) {
+    this._cap(70);
+    const n = this.reduced ? 2 : 6;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 50 + Math.random() * 110;
+      this.bits.push({
+        x, y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        life: 0.14 + Math.random() * 0.12,
+        max: 0.26,
+        r: 1.3 + Math.random(),
+        color: i % 2 ? "#9ad4ff" : "#fff8e0",
+        kind: "spark",
+      });
+    }
+    if (!this.reduced) {
+      this.bits.push({
+        x, y, vx: 0, vy: 0,
+        life: 0.16, max: 0.16, r: 14,
+        color: "rgba(154,212,255,0.35)", kind: "glow",
+      });
+      this.flash = Math.max(this.flash, 0.04);
+    }
+  }
+
   softShake(amt) {
     if (this.reduced) return;
     this.shake = Math.max(this.shake, amt);

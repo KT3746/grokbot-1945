@@ -19,7 +19,8 @@ Cinco estágios — Mar de Vidro, Arquipélago Cinza, Estreito de Bronze, Cânio
 3. Depois de um hit você fica invencível por um instante — use para se reposicionar.
 4. Inimigos dourados (o **Ás**) soltam bônus.
 5. Chefes avisam o ataque (brilho e linha). Bomba limpa tiros inimigos e fere tudo na tela.
-6. Se as três vidas acabarem, é fim de jogo. O recorde fica salvo neste aparelho.
+6. Passe **rente aos tiros** (sem levar hit) pra ganhar pontos de **rasante**.
+7. Se as três vidas acabarem, é fim de jogo. O recorde fica salvo neste aparelho.
 
 ### Bônus
 
@@ -46,7 +47,7 @@ Cinco estágios — Mar de Vidro, Arquipélago Cinza, Estreito de Bronze, Cânio
 
 ### Celular
 
-Arraste o dedo no céu para voar: enquanto o dedo está na tela o **tiro é automático**. **Bomba** (com contador e recarga), **Foco** e **Fogo** à direita. No Android o celular vibra de leve em hit, bomba, bônus e chefe. O primeiro toque também liga o som.
+Arraste o dedo no céu para voar: enquanto o dedo está na tela o **tiro é automático**. **Bomba** (com contador e recarga), **Foco** (botão acende) e **Fogo** à direita. A **barra de missão** mostra o quanto falta pro chefe. Passe rente aos tiros pra **rasante**. O **Escudo** aparece no placar quando você tem. No Android o celular vibra de leve em hit, bomba, bônus, rasante e chefe. O primeiro toque também liga o som.
 
 ## Som e recorde
 
@@ -92,4 +93,4 @@ npm test
 
 O jogo desenha o céu, o mar e os aviões em **Three.js** (baixo-poli, `FogExp2`), com o arquivo da biblioteca **local** em `js/vendor/` — sem CDN. Os botões, o placar e os toques continuam em HTML. Se o aparelho não tiver WebGL, aparece um aviso em português e o visual clássico em canvas 2D entra no lugar. A lógica (tiros, bombas, chefes, pausa) não muda.
 
-Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.13.0**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).
+Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.14.0**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).

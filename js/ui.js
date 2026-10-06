@@ -45,6 +45,12 @@ export class UI {
       bombBtn: document.getElementById("btn-bomb"),
       bombCount: document.getElementById("bomb-count"),
       fireBtn: document.getElementById("btn-fire"),
+      focusBtn: document.getElementById("btn-focus"),
+      shieldWrap: document.getElementById("stat-shield-wrap"),
+      shield: document.getElementById("stat-shield"),
+      missionBar: document.getElementById("mission-bar"),
+      missionLabel: document.getElementById("mission-label"),
+      missionFill: document.getElementById("mission-fill"),
     };
     this._hintActive = false;
     this._hintLeaveTimer = null;
@@ -319,7 +325,22 @@ export class UI {
       this.els.fireBtn.classList.toggle("fire-touch", touch);
       this.els.fireBtn.classList.toggle("fire-auto", g.mode === "playing" && !!this.input?.autoFiring);
     }
+    // Foco: botão aceso + tag "lento" enquanto segura
+    if (this.els.focusBtn) {
+      const on = g.mode === "playing" && !!this.input?.focusHeld;
+      this.els.focusBtn.classList.toggle("focus-on", on);
+      this.els.focusBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+    // Escudo no HUD (só aparece com carga)
+    const sh = (g.player && g.player.shield) | 0;
+    if (this.els.shieldWrap && this.els.shield) {
+      const show = g.mode === "playing" && sh > 0;
+      this.els.shieldWrap.hidden = !show;
+      this.els.shield.textContent = String(sh);
+      this.els.shield.classList.toggle("shield-hot", show);
+    }
     document.body.classList.toggle("low-hp", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
+    document.body.classList.toggle("graze-hot", g.mode === "playing" && (g.grazeFlash || 0) > 0);
     document.getElementById("board-wrap")?.classList.toggle("hp-edge", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
     const meta = STAGE_META[g.stageIndex];
     const loop = g.loop ? ` · ciclo ${g.loop + 1}` : "";
@@ -328,13 +349,31 @@ export class UI {
         ? "Domine o céu. Sobreviva às ondas."
         : `${meta.name}${loop}`;
 
-    if (g.boss && !g.boss.dead) {
+    const bossUp = !!(g.boss && !g.boss.dead);
+    if (bossUp) {
       this.els.bossBar.classList.remove("hidden");
       this.els.bossName.textContent = BOSS_NAMES[g.boss.bossId] || "Chefe";
       const r = Math.max(0, g.boss.hp / g.boss.maxHp);
       this.els.bossFill.style.transform = `scaleX(${r})`;
     } else {
       this.els.bossBar.classList.add("hidden");
+    }
+    // Barra de missão (ondas) — some no título e durante o chefe
+    if (this.els.missionBar && this.els.missionFill) {
+      const playing = g.mode === "playing" || g.mode === "paused";
+      const show = playing && !bossUp;
+      this.els.missionBar.classList.toggle("on", show);
+      this.els.missionBar.setAttribute("aria-hidden", show ? "false" : "true");
+      if (show) {
+        const r = typeof g.missionProgress === "function" ? g.missionProgress() : 0;
+        this.els.missionFill.style.transform = `scaleX(${r})`;
+        const pct = Math.round(r * 100);
+        if (this.els.missionLabel) {
+          this.els.missionLabel.textContent =
+            g.pendingBoss || pct >= 100 ? "Chefe à frente" : `Missão ${pct}%`;
+        }
+        this.els.missionBar.classList.toggle("mission-boss", !!(g.pendingBoss || pct >= 98));
+      }
     }
   }
 
