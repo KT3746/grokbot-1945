@@ -19,6 +19,10 @@ import {
   BOMB_DAMAGE,
   ENEMY_BULLET_R,
   EMPTY_FILL_SEC,
+  GRAZE_SCORE,
+  GRAZE_PAD,
+  isGraze,
+  stageProgress,
   PICKUP_LABEL,
   BOSS_META,
   BOSS_NAMES,
@@ -115,16 +119,28 @@ test("estágio 1 sem buraco longo entre ondas", () => {
   assert.ok(EMPTY_FILL_SEC <= 3.2);
 });
 
-test("versão 1.13.0 wave-3 e cache-bust alinhados", () => {
-  assert.equal(VERSION, "1.13.0");
+test("rasante e progresso de missão", () => {
+  assert.ok(GRAZE_SCORE >= 30);
+  assert.ok(GRAZE_PAD >= 12);
+  assert.equal(isGraze(0, 0, false, 0, 0, 2), false); // hit direto
+  assert.equal(isGraze(0, 0, false, 18, 0, 2), true); // anel
+  assert.equal(isGraze(0, 0, false, 80, 0, 2), false); // longe
+  assert.equal(stageProgress(0, 10, false), 0);
+  assert.equal(stageProgress(5, 10, false), 0.5);
+  assert.equal(stageProgress(10, 10, false), 1);
+  assert.equal(stageProgress(3, 10, true), 1);
+});
+
+test("versão 1.14.0 wave-4 e cache-bust alinhados", () => {
+  assert.equal(VERSION, "1.14.0");
   assert.match(CACHE_V, /^\d{12}$/);
   const html = readFileSync(join(root, "index.html"), "utf8");
   const css = readFileSync(join(root, "css/styles.css"), "utf8");
   const qs = html.match(/\?v=([0-9]+)/g) || [];
   assert.ok(qs.length >= 3);
   for (const q of qs) assert.equal(q, `?v=${CACHE_V}`);
-  assert.match(html, /id="title-ver">v1\.13\.0</);
-  assert.match(html, /id="ver"[^>]*>v1\.13\.0</);
+  assert.match(html, /id="title-ver">v1\.14\.0</);
+  assert.match(html, /id="ver"[^>]*>v1\.14\.0</);
   assert.match(html, /type="importmap"/);
   assert.match(html, /js\/vendor\/three\.module\.js/);
   assert.match(html, /id="view3d"/);
@@ -169,6 +185,16 @@ test("versão 1.13.0 wave-3 e cache-bust alinhados", () => {
   assert.match(game, /weaponLabel/);
   assert.match(renderSrc, /FORMAÇÃO/);
   assert.match(ui, /title-daily|titleDaily/);
+  // wave-4: missão, rasante, escudo/foco
+  assert.match(html, /id="mission-bar"/);
+  assert.match(html, /id="stat-shield"/);
+  assert.match(css, /\.mission-bar/);
+  assert.match(css, /focus-on/);
+  assert.match(game, /_graze/);
+  assert.match(game, /missionProgress/);
+  assert.match(particles, /graze\(/);
+  assert.match(ui, /missionBar|mission-bar/);
+  assert.match(ui, /focus-on|focusBtn/);
   const three = readFileSync(join(root, "js/vendor/three.module.js"), "utf8");
   assert.match(three, /REVISION = '160'/);
   assert.equal(html.toLowerCase().includes("capcom"), false);

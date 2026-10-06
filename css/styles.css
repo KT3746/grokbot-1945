@@ -1111,3 +1111,106 @@ body.modal-open #game {
   #btn-bomb.bomb-gain .bomb-count,
   .weapon-timer.ending b { animation: none !important; }
 }
+
+
+/* ===== Onda 4 (v1.14.0): missão, rasante, escudo/foco ===== */
+.mission-bar {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 10px;
+  z-index: 3;
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.mission-bar.on {
+  display: flex;
+  opacity: 1;
+}
+.mission-bar span {
+  font-family: Oswald, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9ad4ff;
+  text-shadow: 0 1px 2px #000, 0 0 8px #3a78c855;
+}
+.mission-bar i {
+  display: block;
+  height: 5px;
+  background: #00000066;
+  border: 1px solid #9ad4ff55;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.mission-bar b {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #3a78c8, #9ad4ff 55%, #ffe08a);
+  box-shadow: 0 0 10px #9ad4ff66;
+  transform-origin: left;
+  transition: transform 0.18s linear;
+}
+.mission-bar.mission-boss span {
+  color: #ff9a4a;
+  text-shadow: 0 1px 2px #000, 0 0 10px #e85d4c66;
+}
+.mission-bar.mission-boss i { border-color: #ff9a4a66; }
+.mission-bar.mission-boss b {
+  background: linear-gradient(90deg, #e85d4c, #ff9a4a 50%, #ffe08a);
+  animation: mission-pulse 0.7s ease-in-out infinite alternate;
+}
+@keyframes mission-pulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.25); }
+}
+
+.stat-shield strong.shield-hot {
+  color: #9ad4ff;
+  text-shadow: 0 0 10px #9ad4ff88;
+}
+
+#btn-focus { position: relative; }
+.focus-tag {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  font: 800 8px/1 Barlow, sans-serif;
+  letter-spacing: 0.1em;
+  opacity: 0.75;
+  pointer-events: none;
+}
+#btn-focus.focus-on {
+  box-shadow: 0 3px 0 #5a4a30, 0 0 0 4px #ffe08a66, 0 0 18px #ffe08a99;
+  filter: brightness(1.15);
+}
+#btn-focus.focus-on .focus-tag { display: block; }
+
+body.graze-hot #board-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: inset 0 0 28px #9ad4ff33;
+}
+
+@media (max-width: 720px), (pointer: coarse) {
+  .mission-bar span { font-size: 10px; }
+  .mission-bar i { height: 6px; }
+  #btn-focus.focus-on {
+    box-shadow: 0 3px 0 #5a4a30, 0 0 0 5px #ffe08a77, 0 0 22px #ffe08acc;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mission-bar.mission-boss b { animation: none !important; }
+  body.graze-hot #board-wrap::after { box-shadow: inset 0 0 14px #9ad4ff22; }
+}

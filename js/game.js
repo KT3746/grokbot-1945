@@ -35,6 +35,9 @@ import {
   BOMB_COOLDOWN,
   BOMB_INVULN,
   EMPTY_FILL_SEC,
+  GRAZE_SCORE,
+  isGraze,
+  stageProgress,
 } from "./core.js";
 import { STAGES } from "./stages.js";
 import { FX } from "./particles.js";
@@ -152,6 +155,8 @@ export class Game {
     this.runStages = 0;
     this.weaponFlash = 0;
     this.bombGain = 0;
+    this.grazeFlash = 0;
+    this.grazeStreak = 0;
     this.lastWeapon = "TIRO";
     this.newDaily = false;
     this.player = this._player();
@@ -237,6 +242,13 @@ export class Game {
     if (p.rapidT > 0.15) return Math.min(1, p.rapidT / 10);
     if (p.spreadT > 0.15 && p.spread >= 3) return Math.min(1, p.spreadT / 14);
     return 0;
+  }
+
+  /** Progresso da missão (ondas) 0..1 — barra sob o céu no celular. */
+  missionProgress() {
+    const script = STAGES[this.stageIndex]?.waves || [];
+    const bossAlive = !!(this.boss && !this.boss.dead);
+    return stageProgress(this.waveI, script.length, bossAlive);
   }
 
   /** First-minute: some a dica após 1º movimento ou tiro. */
@@ -334,6 +346,9 @@ export class Game {
     if (this.comboT <= 0) this.combo = 0;
     if (this.weaponFlash > 0) this.weaponFlash -= dt;
     if (this.bombGain > 0) this.bombGain -= dt;
+    if (this.grazeFlash > 0) this.grazeFlash -= dt;
+    // rasante some se ficar sem raspar
+    if (this.grazeFlash <= 0) this.grazeStreak = 0;
 
     this._director(dt);
     this._updateEnemies(dt);
@@ -901,6 +916,15 @@ export class Game {
 
     if (!p.alive) return;
 
+    // Rasante: anel em volta da hitbox (vale mesmo em i-frames / escudo de bomba)
+    for (const b of this.eBullets) {
+      if (b.grazed) continue;
+      if (isGraze(p.x, p.y, p.focus, b.x, b.y, b.r)) {
+        b.grazed = true;
+        this._graze(b.x, b.y);
+      }
+    }
+
     const vulnerable = p.invuln <= 0 && !(this.bombShieldT > 0);
     if (vulnerable) {
       for (let i = this.eBullets.length - 1; i >= 0; i--) {
@@ -929,6 +953,20 @@ export class Game {
         this.pickups.splice(i, 1);
       }
     }
+  }
+
+  _graze(x, y) {
+    this.grazeStreak = (this.grazeStreak | 0) + 1;
+    this.grazeFlash = 0.55;
+    const bonus = GRAZE_SCORE + Math.min(40, (this.grazeStreak - 1) * 5);
+    this._addScore(bonus);
+    this.fx.graze(x, y);
+    const label = this.grazeStreak >= 5 ? `RASANTE x${this.grazeStreak}` : "RASANTE!";
+    this.fx.floatText(x, y - 8, label, "#9ad4ff", { pop: true });
+    if (this.grazeStreak === 1 || this.grazeStreak % 4 === 0) {
+      this.fx.floatText(x, y - 22, `+${bonus}`, "#cce8ff");
+    }
+    this._buzz(8);
   }
 
   _kill(e, fromBomb) {

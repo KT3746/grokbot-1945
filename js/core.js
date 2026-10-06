@@ -24,6 +24,10 @@ export const BOMB_COOLDOWN = 0.95;
 export const BOMB_INVULN = 1.35;
 export const EMPTY_FILL_SEC = 2.4;
 export const EXTRA_LIFE_AT = [20000, 50000, 100000, 200000];
+/** Pontos por rasante (tiro inimigo quase acerta). */
+export const GRAZE_SCORE = 40;
+/** Anel de rasante além da hitbox (px). */
+export const GRAZE_PAD = 16;
 
 export function moveSpeed(focus) {
   return PLAYER_SPEED * (focus ? FOCUS_SPEED_MUL : 1);
@@ -63,6 +67,21 @@ export function circleHit(ax, ay, ar, bx, by, br) {
   const dy = ay - by;
   const r = ar + br;
   return dx * dx + dy * dy <= r * r;
+}
+
+/** Rasante: perto o bastante, mas fora da hitbox. */
+export function isGraze(px, py, focus, bx, by, br) {
+  const hr = playerHitR(focus);
+  if (circleHit(px, py, hr, bx, by, br)) return false;
+  return circleHit(px, py, hr + GRAZE_PAD, bx, by, br);
+}
+
+/** Progresso da missão 0..1 (ondas disparadas / total). Chefe = 1. */
+export function stageProgress(waveI, waveCount, bossAlive) {
+  if (bossAlive) return 1;
+  const n = waveCount | 0;
+  if (n <= 0) return 1;
+  return Math.min(1, Math.max(0, (waveI | 0) / n));
 }
 
 export function len(x, y) {
