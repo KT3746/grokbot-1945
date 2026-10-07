@@ -47,7 +47,7 @@ Cinco estágios — Mar de Vidro, Arquipélago Cinza, Estreito de Bronze, Cânio
 
 ### Celular
 
-Arraste o dedo no céu para voar: enquanto o dedo está na tela o **tiro é automático**. **Bomba** (com contador e recarga), **Foco** (botão acende) e **Fogo** à direita. A **barra de missão** mostra o quanto falta pro chefe. Passe rente aos tiros pra **rasante**. O **Escudo** aparece no placar quando você tem. No Android o celular vibra de leve em hit, bomba, bônus, rasante e chefe. O primeiro toque também liga o som.
+Arraste o dedo no céu para voar: enquanto o dedo está na tela o **tiro é automático**. **Bomba** fica no **polegar esquerdo** (contador e recarga); **Foco** e **Fogo** à direita. O **chip de combo** no placar mostra a sequência com barrinha de tempo. Um **toast** anuncia bônus e hits. A **barra de missão** mostra o quanto falta pro chefe. Passe rente aos tiros pra **rasante**. O **Escudo** aparece no placar quando você tem. Hit acende um flash vermelho no HUD. No Android o celular vibra de leve em hit, bomba, bônus, rasante e chefe. O primeiro toque também liga o som.
 
 ## Som e recorde
 
@@ -93,4 +93,4 @@ npm test
 
 O jogo desenha o céu, o mar e os aviões em **Three.js** (baixo-poli, `FogExp2`), com o arquivo da biblioteca **local** em `js/vendor/` — sem CDN. Os botões, o placar e os toques continuam em HTML. Se o aparelho não tiver WebGL, aparece um aviso em português e o visual clássico em canvas 2D entra no lugar. A lógica (tiros, bombas, chefes, pausa) não muda.
 
-Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.14.0**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).
+Site estático para GitHub Pages (pasta raiz, branch `main`). A constante `VERSION` em `js/version.js` é o número na tela (agora **1.15.0**). O `CACHE_V` (`?v=YYYYMMDDHHMM`, horário de Brasília) evita cache velho no HTML, CSS e scripts. Three.js fica em `js/vendor/` (r160, MIT).

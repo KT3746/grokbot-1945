@@ -51,10 +51,16 @@ export class UI {
       missionBar: document.getElementById("mission-bar"),
       missionLabel: document.getElementById("mission-label"),
       missionFill: document.getElementById("mission-fill"),
+      comboWrap: document.getElementById("stat-combo-wrap"),
+      combo: document.getElementById("stat-combo"),
+      comboTimer: document.getElementById("combo-timer"),
+      comboTimerFill: document.getElementById("combo-timer-fill"),
+      toast: document.getElementById("toast"),
     };
     this._hintActive = false;
     this._hintLeaveTimer = null;
     this._lastScore = 0;
+    this._lastToast = "";
     this.game.onFirstAction = () => this.dismissHint(false);
     this._syncVersion();
     this._bind();
@@ -339,8 +345,42 @@ export class UI {
       this.els.shield.textContent = String(sh);
       this.els.shield.classList.toggle("shield-hot", show);
     }
+    // Chip de combo + barrinha de janela
+    if (this.els.comboWrap && this.els.combo) {
+      const n = g.combo | 0;
+      const show = g.mode === "playing" && n >= 2;
+      this.els.comboWrap.hidden = !show;
+      if (show) {
+        this.els.combo.textContent = `x${n}`;
+        this.els.combo.classList.toggle("combo-mid", n >= 5);
+        this.els.combo.classList.toggle("combo-hot", n >= 8);
+      }
+      const r = typeof g.comboTimer === "function" ? g.comboTimer() : 0;
+      if (this.els.comboTimer && this.els.comboTimerFill) {
+        this.els.comboTimer.classList.toggle("on", show && r > 0);
+        this.els.comboTimer.classList.toggle("ending", show && r > 0 && r < 0.28);
+        this.els.comboTimerFill.style.transform = `scaleX(${r})`;
+      }
+    }
+    // Toast de bônus / hit (HTML, legível no Galaxy)
+    if (this.els.toast) {
+      const show = g.mode === "playing" && (g.toastT || 0) > 0 && g.toast;
+      if (show && g.toast !== this._lastToast) {
+        this.els.toast.textContent = g.toast;
+        this._lastToast = g.toast;
+      }
+      if (!show) this._lastToast = "";
+      this.els.toast.classList.toggle("hidden", !show);
+      this.els.toast.classList.toggle("on", show);
+      this.els.toast.classList.toggle("toast-hit", show && g.toastKind === "hit");
+      this.els.toast.classList.toggle("toast-loot", show && g.toastKind !== "hit");
+      if (g.toastKind) {
+        this.els.toast.dataset.kind = g.toastKind;
+      }
+    }
     document.body.classList.toggle("low-hp", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
     document.body.classList.toggle("graze-hot", g.mode === "playing" && (g.grazeFlash || 0) > 0);
+    document.body.classList.toggle("hit-flash", g.mode === "playing" && (g.hitFlash || 0) > 0);
     document.getElementById("board-wrap")?.classList.toggle("hp-edge", g.mode === "playing" && g.lives <= 1 && !!g.player?.alive);
     const meta = STAGE_META[g.stageIndex];
     const loop = g.loop ? ` · ciclo ${g.loop + 1}` : "";

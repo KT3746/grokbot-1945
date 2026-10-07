@@ -1214,3 +1214,168 @@ body.graze-hot #board-wrap::after {
   .mission-bar.mission-boss b { animation: none !important; }
   body.graze-hot #board-wrap::after { box-shadow: inset 0 0 14px #9ad4ff22; }
 }
+
+
+/* ===== Onda 5 (v1.15.0): toast, combo chip, dual-thumb, hit flash ===== */
+
+/* Chip de combo no placar */
+.stat-combo { position: relative; min-width: 40px; }
+.stat-combo strong {
+  color: #ffe08a;
+  text-shadow: 0 0 8px #e0b84a66;
+}
+.stat-combo strong.combo-mid { color: #ff9a4a; }
+.stat-combo strong.combo-hot {
+  color: #ff6a4a;
+  animation: combo-hot-pulse 0.9s ease-in-out infinite;
+}
+.combo-timer {
+  display: block;
+  height: 3px;
+  margin-top: 3px;
+  border-radius: 2px;
+  background: #ffffff1a;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.combo-timer.on { opacity: 1; }
+.combo-timer b {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, #e0b84a, #ffe08a);
+  box-shadow: 0 0 6px #e0b84a99;
+}
+.combo-timer.ending b {
+  background: #ff6a4a;
+  animation: wt-blink 0.32s steps(2, start) infinite;
+}
+
+/* Toast de bônus (HTML, legível no Galaxy) */
+.toast {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  z-index: 4;
+  transform: translate(-50%, -6px) scale(0.96);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font: 800 13px/1.2 Oswald, Barlow, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #1a1208;
+  background: linear-gradient(180deg, #ffe08a, #e0b84a);
+  border: 1px solid #fff6c8aa;
+  box-shadow: 0 4px 0 #8a5a1a, 0 0 22px #e0b84a66;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  white-space: nowrap;
+  max-width: 92%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toast.on {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+.toast.toast-hit {
+  color: #fff4f0;
+  background: linear-gradient(180deg, #ff8a6a, #e85d4c);
+  border-color: #ffc8b8aa;
+  box-shadow: 0 4px 0 #6a1a12, 0 0 22px #e85d4c77;
+}
+.toast[data-kind="shield"],
+.toast[data-kind="bomb"] {
+  background: linear-gradient(180deg, #c8e8ff, #6aa8e0);
+  box-shadow: 0 4px 0 #1a3a68, 0 0 22px #9ad4ff66;
+}
+.toast[data-kind="life"] {
+  background: linear-gradient(180deg, #b8efc8, #5aaa78);
+  box-shadow: 0 4px 0 #1a4a2a, 0 0 22px #7dce9a66;
+}
+.toast[data-kind="rapid"] {
+  background: linear-gradient(180deg, #ffc08a, #ff7a3a);
+}
+
+/* Flash de hit no chrome (HUD) */
+body.hit-flash #hud {
+  filter: saturate(1.35) brightness(1.08);
+}
+body.hit-flash #board-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: inset 0 0 36px #e85d4c77, inset 0 0 12px #ff6a4a55;
+  animation: hit-chrome 0.45s ease-out;
+}
+@keyframes hit-chrome {
+  from { opacity: 1; }
+  to { opacity: 0.35; }
+}
+
+/* Dual-thumb: bomba à esquerda, foco/fogo à direita */
+.touch-left {
+  display: none;
+  pointer-events: auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 4px;
+}
+.touch-left #btn-bomb {
+  margin-bottom: 0;
+}
+
+@media (max-width: 720px), (pointer: coarse) {
+  .touch {
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .touch-left {
+    display: flex;
+    padding-left: max(2px, env(safe-area-inset-left));
+  }
+  .touch-actions {
+    margin-left: 0;
+    padding-right: max(2px, env(safe-area-inset-right));
+  }
+  .touch-left #btn-bomb {
+    width: 72px;
+    height: 52px;
+    min-width: 72px;
+    min-height: 52px;
+    font: 800 13px/1 Barlow, sans-serif;
+    box-shadow: 0 3px 0 #1a3a68, 0 0 14px #9ad4ff44;
+  }
+  .toast {
+    top: 16%;
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+  .stat-combo strong { font-size: 14px; }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .touch-left #btn-bomb {
+    width: 60px;
+    height: 42px;
+    min-width: 60px;
+    min-height: 42px;
+    font-size: 11px;
+  }
+  .toast { top: 12%; font-size: 11px; padding: 5px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: none !important; }
+  .toast.on { transform: translate(-50%, 0); }
+  body.hit-flash #board-wrap::before { animation: none !important; opacity: 0.7; }
+  .stat-combo strong.combo-hot,
+  .combo-timer.ending b { animation: none !important; }
+}
