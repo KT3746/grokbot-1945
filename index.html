@@ -13,15 +13,15 @@
     <meta property="og:description" content="Arcade vertical premium. Domine o céu. Sobreviva às ondas." />
     <meta property="og:type" content="website" />
     <title>1945</title>
-    <link rel="icon" href="assets/favicon.svg?v=202610060455" type="image/svg+xml" />
+    <link rel="icon" href="assets/favicon.svg?v=202610070423" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/styles.css?v=202610060455" />
+    <link rel="stylesheet" href="css/styles.css?v=202610070423" />
     <script type="importmap">
     {
       "imports": {
-        "three": "./js/vendor/three.module.js?v=202610060455"
+        "three": "./js/vendor/three.module.js?v=202610070423"
       }
     }
     </script>
@@ -53,6 +53,11 @@
             <div class="stat stat-shield" id="stat-shield-wrap" hidden>
               <span>Escudo</span>
               <strong id="stat-shield">0</strong>
+            </div>
+            <div class="stat stat-combo" id="stat-combo-wrap" hidden>
+              <span>Combo</span>
+              <strong id="stat-combo">x0</strong>
+              <i class="combo-timer" id="combo-timer" aria-hidden="true"><b id="combo-timer-fill"></b></i>
             </div>
             <div class="stat">
               <span>Bombas</span>
@@ -88,15 +93,18 @@
               <i><b id="boss-fill"></b></i>
             </div>
             <div id="hint-bar" class="hint-bar hidden" role="status" aria-live="polite">Arraste pra voar · o tiro é automático</div>
+            <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
           </div>
         </main>
 
         <nav id="touch" class="touch" aria-label="Controles de toque">
+          <div class="touch-left" aria-label="Ações à esquerda">
+            <button type="button" id="btn-bomb" aria-label="Bomba">Bomba<span class="bomb-count" id="bomb-count" aria-hidden="true">2</span></button>
+          </div>
           <div id="stick" class="stick" aria-label="Mover">
             <div id="stick-knob"></div>
           </div>
           <div class="touch-actions">
-            <button type="button" id="btn-bomb" aria-label="Bomba">Bomba<span class="bomb-count" id="bomb-count" aria-hidden="true">2</span></button>
             <button type="button" id="btn-focus" aria-label="Foco">Foco<small class="focus-tag" aria-hidden="true">lento</small></button>
             <button type="button" id="btn-fire" aria-label="Atirar" class="fire-btn">Fogo<small class="fire-auto-tag" aria-hidden="true">auto</small></button>
           </div>
@@ -108,7 +116,7 @@
 
     <div id="screen-title" class="overlay" role="dialog" aria-modal="true" aria-labelledby="title-h">
       <div class="modal">
-        <p class="eyebrow">1945 · <span id="title-ver">v1.14.0</span></p>
+        <p class="eyebrow">1945 · <span id="title-ver">v1.15.0</span></p>
         <h2 id="title-h">1945</h2>
         <p class="tagline">Arcade premium · vista de cima · PC e celular</p>
         <p class="tagline subtag">Domine o céu. Sobreviva às ondas.</p>
@@ -141,7 +149,7 @@
         </ul>
         <div class="keys">
           <p><strong>Computador:</strong> setas ou WASD · Espaço/Z fogo · Shift/C foco · X bomba · P/Esc pausa</p>
-          <p><strong>Celular:</strong> arraste na tela pra voar · com o dedo no céu o tiro é <strong>automático</strong> · Foco (preciso, botão acende) · Bomba (o número mostra quantas restam) · a barra de missão mostra o quanto falta pro chefe</p>
+          <p><strong>Celular:</strong> arraste na tela pra voar · com o dedo no céu o tiro é <strong>automático</strong> · <strong>Bomba</strong> no polegar esquerdo · Foco e Fogo à direita · o chip de combo e o toast de bônus aparecem no HUD</p>
         </div>
         <button type="button" id="btn-howto-go" class="cta">Entendi, decolar</button>
         <button type="button" id="btn-howto-back" class="linkish">Voltar</button>
@@ -190,7 +198,7 @@
       </div>
     </div>
 
-    <div id="ver" class="foot">v1.14.0</div>
-    <script type="module" src="js/main.js?v=202610060455"></script>
+    <div id="ver" class="foot">v1.15.0</div>
+    <script type="module" src="js/main.js?v=202610070423"></script>
   </body>
 </html>

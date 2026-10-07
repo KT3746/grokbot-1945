@@ -157,6 +157,10 @@ export class Game {
     this.bombGain = 0;
     this.grazeFlash = 0;
     this.grazeStreak = 0;
+    this.hitFlash = 0;
+    this.toast = "";
+    this.toastT = 0;
+    this.toastKind = "";
     this.lastWeapon = "TIRO";
     this.newDaily = false;
     this.player = this._player();
@@ -244,11 +248,24 @@ export class Game {
     return 0;
   }
 
-  /** Progresso da missão (ondas) 0..1 — barra sob o céu no celular. */
+  /** Progresso da missão (ondas) 0..1 - barra sob o céu no celular. */
   missionProgress() {
     const script = STAGES[this.stageIndex]?.waves || [];
     const bossAlive = !!(this.boss && !this.boss.dead);
     return stageProgress(this.waveI, script.length, bossAlive);
+  }
+
+  /** Fração restante da janela de combo (0..1) para o chip do HUD. */
+  comboTimer() {
+    if ((this.combo | 0) < 2) return 0;
+    return Math.max(0, Math.min(1, this.comboT / COMBO_WINDOW));
+  }
+
+  /** Toast HTML de bônus / hit (lido pela UI). */
+  pushToast(text, kind = "loot") {
+    this.toast = text;
+    this.toastKind = kind;
+    this.toastT = kind === "hit" ? 0.9 : 1.35;
   }
 
   /** First-minute: some a dica após 1º movimento ou tiro. */
@@ -349,6 +366,8 @@ export class Game {
     if (this.grazeFlash > 0) this.grazeFlash -= dt;
     // rasante some se ficar sem raspar
     if (this.grazeFlash <= 0) this.grazeStreak = 0;
+    if (this.hitFlash > 0) this.hitFlash -= dt;
+    if (this.toastT > 0) this.toastT -= dt;
 
     this._director(dt);
     this._updateEnemies(dt);
@@ -1059,16 +1078,19 @@ export class Game {
       this.fx.boom(p.x, p.y, 10, "#9ad4ff");
       try { this.audio.hit(); } catch (_) {}
       this.fx.floatText(p.x, p.y - 16, "ESCUDO", "#9ad4ff");
+      this.pushToast("Escudo absorveu!", "shield");
       this._buzz(25);
       return;
     }
     this.lives--;
+    this.hitFlash = 0.55;
     this._buzz([60, 40, 60]);
     try { this.audio.hurt(); } catch (_) {}
     this.fx.playerHurt();
     this.fx.boom(p.x, p.y, 22, "#e85d4c");
     this.fx.softFlash(0.28);
     this.fx.floatText(p.x, p.y - 28, "HIT!", "#ff6a4a", { pop: true });
+    this.pushToast(this.lives <= 0 ? "Mayday!" : `Vidas: ${this.lives}`, "hit");
     p.spread = 1;
     p.spreadT = 0;
     p.rapidT = 0;
@@ -1097,25 +1119,31 @@ export class Game {
       p.spreadT = Math.max(p.spreadT, 14);
       this.fx.floatText(x, y - 8, "TIRO+", "#ffe08a", { pop: true });
       this.fx.floatText(x, y - 26, "arma reforçada", "#ffe7b3");
+      this.pushToast("TIRO+ coletado", "shot");
     } else if (kind === "spread") {
       p.spread = Math.min(MAX_SPREAD, p.spread + 2);
       p.spreadT = 14;
       this.fx.floatText(x, y - 8, "LEQUE", "#ffd36a", { pop: true });
       this.fx.floatText(x, y - 26, "tiro em leque!", "#ffe7b3");
+      this.pushToast("Leque ativado!", "spread");
     } else if (kind === "rapid") {
       p.rapidT = 10;
       this.fx.floatText(x, y - 8, "RAJADA", "#ff9a4a", { pop: true });
       this.fx.floatText(x, y - 26, "cadência alta!", "#ffc8a0");
+      this.pushToast("Rajada ativada!", "rapid");
     } else if (kind === "shield") {
       p.shield = Math.min(3, p.shield + 1);
       this.fx.floatText(x, y - 8, "ESCUDO", "#9ad4ff", { pop: true });
+      this.pushToast("Escudo +1", "shield");
     } else if (kind === "bomb") {
       this.bombs = Math.min(MAX_BOMBS, this.bombs + 1);
       this.bombGain = 1.2;
       this.fx.floatText(x, y - 8, "BOMBA +1", "#9ad4ff", { pop: true });
+      this.pushToast("Bomba +1", "bomb");
     } else {
       this._addScore(1000);
       this.fx.floatText(x, y - 8, "+1000", "#ffe08a", { pop: true });
+      this.pushToast("Medalha +1000", "medal");
     }
     void label;
     const nextW = this.weaponLabel();
@@ -1137,6 +1165,7 @@ export class Game {
       this.lives += extra;
       try { this.audio.extraLife(); } catch (_) {}
       this.fx.floatText(this.player.x, this.player.y - 28, "VIDA +1", "#7dce9a");
+      this.pushToast("Vida extra!", "life");
     }
     if (this.score > this.high) {
       this.high = this.score;

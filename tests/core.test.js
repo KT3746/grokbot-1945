@@ -131,16 +131,16 @@ test("rasante e progresso de missão", () => {
   assert.equal(stageProgress(3, 10, true), 1);
 });
 
-test("versão 1.14.0 wave-4 e cache-bust alinhados", () => {
-  assert.equal(VERSION, "1.14.0");
+test("versão 1.15.0 wave-5 e cache-bust alinhados", () => {
+  assert.equal(VERSION, "1.15.0");
   assert.match(CACHE_V, /^\d{12}$/);
   const html = readFileSync(join(root, "index.html"), "utf8");
   const css = readFileSync(join(root, "css/styles.css"), "utf8");
   const qs = html.match(/\?v=([0-9]+)/g) || [];
   assert.ok(qs.length >= 3);
   for (const q of qs) assert.equal(q, `?v=${CACHE_V}`);
-  assert.match(html, /id="title-ver">v1\.14\.0</);
-  assert.match(html, /id="ver"[^>]*>v1\.14\.0</);
+  assert.match(html, /id="title-ver">v1\.15\.0</);
+  assert.match(html, /id="ver"[^>]*>v1\.15\.0</);
   assert.match(html, /type="importmap"/);
   assert.match(html, /js\/vendor\/three\.module\.js/);
   assert.match(html, /id="view3d"/);
@@ -195,6 +195,19 @@ test("versão 1.14.0 wave-4 e cache-bust alinhados", () => {
   assert.match(particles, /graze\(/);
   assert.match(ui, /missionBar|mission-bar/);
   assert.match(ui, /focus-on|focusBtn/);
+  // wave-5: toast, combo chip, dual-thumb, hit flash
+  assert.match(html, /id="toast"/);
+  assert.match(html, /id="stat-combo"/);
+  assert.match(html, /id="stat-combo-wrap"/);
+  assert.match(html, /class="touch-left"/);
+  assert.match(css, /\.toast/);
+  assert.match(css, /stat-combo|combo-timer/);
+  assert.match(css, /touch-left/);
+  assert.match(css, /hit-flash|hit-chrome/);
+  assert.match(game, /pushToast/);
+  assert.match(game, /comboTimer/);
+  assert.match(game, /hitFlash/);
+  assert.match(ui, /toast|comboWrap|hit-flash/);
   const three = readFileSync(join(root, "js/vendor/three.module.js"), "utf8");
   assert.match(three, /REVISION = '160'/);
   assert.equal(html.toLowerCase().includes("capcom"), false);
