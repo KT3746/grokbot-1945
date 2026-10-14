@@ -238,7 +238,12 @@ export class UI {
             : meta.subtitle;
       }
       if (this.els.stageScore) {
-        this.els.stageScore.textContent = `Pontos: ${this.game.score}`;
+        const g = this.game;
+        const parts = [];
+        if (g.stageNoHit) parts.push(`Sem dano +${3000 * (g.loop + 1)}`);
+        if (g.stageBombBonus) parts.push(`Bombas guardadas +${g.stageBombBonus}`);
+        this.els.stageScore.textContent = `Pontos: ${g.score}` + (parts.length ? ` · ${parts.join(" · ")}` : "");
+        this.els.stageScore.classList.toggle("stage-perfect", !!g.stageNoHit);
       }
       if (this.els.stageMeta) {
         this.els.stageMeta.textContent =
@@ -395,8 +400,23 @@ export class UI {
       this.els.bossName.textContent = BOSS_NAMES[g.boss.bossId] || "Chefe";
       const r = Math.max(0, g.boss.hp / g.boss.maxHp);
       this.els.bossFill.style.transform = `scaleX(${r})`;
+      // Onda 6: rastro branco de dano + % + fase 2 pulsando
+      if (!this.bossLag) {
+        this.bossLag = document.createElement("b");
+        this.bossLag.className = "boss-lag";
+        this.els.bossFill.parentElement.insertBefore(this.bossLag, this.els.bossFill);
+        this.bossPct = document.createElement("em");
+        this.bossPct.className = "boss-pct";
+        this.els.bossName.after(this.bossPct);
+      }
+      if (this.bossLagR == null || this.bossLagR < r) this.bossLagR = r;
+      this.bossLagR += (r - this.bossLagR) * 0.06;
+      this.bossLag.style.transform = `scaleX(${this.bossLagR})`;
+      this.bossPct.textContent = `${Math.ceil(r * 100)}%`;
+      this.els.bossBar.classList.toggle("boss-rage", !!g.boss.raged);
     } else {
       this.els.bossBar.classList.add("hidden");
+      this.bossLagR = null;
     }
     // Barra de missão (ondas) — some no título e durante o chefe
     if (this.els.missionBar && this.els.missionFill) {
