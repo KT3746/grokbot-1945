@@ -1216,7 +1216,7 @@ body.graze-hot #board-wrap::after {
 }
 
 
-/* ===== Onda 5 (v1.15.0): toast, combo chip, dual-thumb, hit flash ===== */
+/* ===== Onda 5 (v1.16.0): toast, combo chip, dual-thumb, hit flash ===== */
 
 /* Chip de combo no placar */
 .stat-combo { position: relative; min-width: 40px; }
@@ -1379,3 +1379,14 @@ body.hit-flash #board-wrap::before {
   .stat-combo strong.combo-hot,
   .combo-timer.ending b { animation: none !important; }
 }
+
+/* Onda 6: rastro de dano do chefe, %, fase 2, última vida, recorde */
+.boss-bar i { position: relative; height: 10px; }
+.boss-bar b { position: relative; z-index: 1; }
+.boss-bar b.boss-lag { position: absolute; inset: 0; z-index: 0; background: #fff6e0; box-shadow: none; transition: none; opacity: .85; }
+.boss-bar .boss-pct { position: absolute; right: 2px; top: 0; font: 600 12px Oswald, sans-serif; font-style: normal; color: #ffe7b3; text-shadow: 0 1px 2px #000; }
+.boss-bar.boss-rage i { border-color: #ff6a4a; animation: boss-rage .7s ease-in-out infinite; }
+@keyframes boss-rage { 50% { box-shadow: 0 0 14px #ff3a2acc; } }
+.toast-record, #toast[data-kind="record"] { color: #ffe08a !important; text-shadow: 0 0 14px #e0b84acc; }
+@media (prefers-reduced-motion: reduce) { .boss-bar.boss-rage i { animation: none; } }
+.stage-perfect { color: #9ef0b8 !important; text-shadow: 0 0 12px #7dce9a99; }

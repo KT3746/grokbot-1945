@@ -130,6 +130,11 @@ export class Game {
 
   resetRun() {
     this.score = 0;
+    this.runHighStart = this.high || 0;
+    this.recordToastDone = false;
+    this.lastLifeWarned = false;
+    this.stageHits = 0;
+    this.stageBonus = 0;
     this.lives = START_LIVES;
     this.bombs = START_BOMBS;
     this.stageIndex = 0;
@@ -1083,6 +1088,7 @@ export class Game {
       return;
     }
     this.lives--;
+    this.stageHits = (this.stageHits | 0) + 1;
     this.hitFlash = 0.55;
     this._buzz([60, 40, 60]);
     try { this.audio.hurt(); } catch (_) {}
@@ -1101,6 +1107,10 @@ export class Game {
       this._saveHigh();
       try { this.audio.gameover(); } catch (_) {}
       return;
+    }
+    if (this.lives === 1 && !this.lastLifeWarned) {
+      this.lastLifeWarned = true;
+      this.pushToast("Última vida! Cuidado", "hit");
     }
     this.spawnPlayer();
   }
@@ -1168,6 +1178,15 @@ export class Game {
       this.pushToast("Vida extra!", "life");
     }
     if (this.score > this.high) {
+      // Onda 6: recorde batido ao vivo (uma vez por partida)
+      if (!this.recordToastDone && this.runHighStart > 0 && this.score > this.runHighStart) {
+        this.recordToastDone = true;
+        this.pushToast("NOVO RECORDE!", "record");
+        this._buzz([15, 40, 15, 40, 30]);
+        this.fx.softFlash(0.16);
+        this.fx.floatText(W / 2, H * 0.3, "RECORDE!", "#ffe08a", { pop: true });
+        try { this.audio.extraLife(); } catch (_) {}
+      }
       this.high = this.score;
       this._saveHigh();
     }
@@ -1193,6 +1212,21 @@ export class Game {
   }
 
   _onStageCleared() {
+    // Onda 6: bônus de estágio sem dano + bombas guardadas
+    const noHit = (this.stageHits | 0) === 0;
+    const bombBonus = Math.max(0, this.bombs | 0) * 500;
+    const bonus = (noHit ? 3000 * (this.loop + 1) : 0) + bombBonus;
+    this.stageBonus = bonus;
+    this.stageNoHit = noHit;
+    this.stageBombBonus = bombBonus;
+    if (bonus > 0) {
+      this._addScore(bonus);
+      if (noHit) {
+        this.fx.floatText(W / 2, H * 0.5, `SEM DANO! +${3000 * (this.loop + 1)}`, "#7dce9a", { pop: true });
+        this._buzz([20, 30, 20]);
+      }
+    }
+    this.stageHits = 0;
     this.runStages = (this.runStages | 0) + 1;
     this.stagesCleared = (this.stagesCleared | 0) + 1;
     this._saveStages();
