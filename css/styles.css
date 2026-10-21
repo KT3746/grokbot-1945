@@ -1009,7 +1009,19 @@ body.modal-open #game {
     padding: 6px 8px 22px;
   }
   .brand h1 { font-size: 15px; }
-  .tag { max-width: 42vw; }
+  .tag {
+    max-width: 46vw;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .subtag {
+    font-size: 12px !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .stats {
     gap: 6px;
     padding: 4px 7px;
