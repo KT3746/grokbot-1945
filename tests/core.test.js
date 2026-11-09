@@ -131,8 +131,8 @@ test("rasante e progresso de missão", () => {
   assert.equal(stageProgress(3, 10, true), 1);
 });
 
-test("versão 1.16.1 wave-6 e cache-bust alinhados", () => {
-  assert.equal(VERSION, "1.16.1");
+test("versão 1.17.0 wave-7 e cache-bust alinhados", () => {
+  assert.equal(VERSION, "1.17.0");
   assert.match(CACHE_V, /^\d{12}$/);
   const html = readFileSync(join(root, "index.html"), "utf8");
   const css = readFileSync(join(root, "css/styles.css"), "utf8");

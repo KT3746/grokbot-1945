@@ -327,6 +327,8 @@ export class UI {
       const empty = (g.bombs | 0) <= 0;
       this.els.bombBtn.classList.toggle("bomb-empty", empty);
       this.els.bombBtn.classList.toggle("bomb-cd", !empty && (g.bombCd || 0) > 0);
+      // Onda 7: pisca quando a bomba está pronta
+      this.els.bombBtn.classList.toggle("bomb-ready", !empty && (g.bombCd || 0) <= 0);
       this.els.bombBtn.classList.toggle("bomb-gain", (g.bombGain || 0) > 0);
       this.els.bombBtn.setAttribute("aria-label", empty ? "Bomba (sem bombas)" : `Bomba (${g.bombs | 0})`);
     }
