@@ -134,6 +134,8 @@ export class Game {
     this.recordToastDone = false;
     this.lastLifeWarned = false;
     this.stageHits = 0;
+    this.noHitMidToast = false;
+    this.bombReadyToast = false;
     this.stageBonus = 0;
     this.lives = START_LIVES;
     this.bombs = START_BOMBS;
@@ -222,6 +224,9 @@ export class Game {
     this.bannerKind = "stage";
     this.waveT = 0;
     this.waveI = 0;
+    this.noHitMidToast = false;
+    this.stageHits = 0;
+    this.bombReadyToast = this.bombCd <= 0 && (this.bombs | 0) > 0;
     this.pendingBoss = false;
     this.boss = null;
     this.cleared = false;
@@ -461,6 +466,24 @@ export class Game {
     // largura/altura CSS do canvas. Letterbox não atrasa nem cancela ondas.
     if (this.cleared || this.pendingBoss) return;
     this.waveT += dt;
+    // Onda 7: aviso no meio do estágio se ainda sem dano
+    if (!this.noHitMidToast && (this.stageHits | 0) === 0) {
+      const scriptLen = (STAGES[this.stageIndex]?.waves || []).length;
+      if (scriptLen > 0 && this.waveI >= Math.ceil(scriptLen * 0.5)) {
+        this.noHitMidToast = true;
+        this.pushToast("Sem dano! Continua assim", "loot");
+        this._buzz(10);
+      }
+    }
+    // Onda 7: bomba pronta após recarga
+    if ((this.bombs | 0) > 0 && this.bombCd <= 0) {
+      if (!this.bombReadyToast) {
+        this.bombReadyToast = true;
+        this.pushToast("Bomba pronta!", "bomb");
+      }
+    } else if (this.bombCd > 0) {
+      this.bombReadyToast = false;
+    }
     const script = STAGES[this.stageIndex].waves;
     while (this.waveI < script.length && script[this.waveI].at <= this.waveT) {
       const ev = script[this.waveI++];
@@ -989,6 +1012,13 @@ export class Game {
     this.fx.floatText(x, y - 8, label, "#9ad4ff", { pop: true });
     if (this.grazeStreak === 1 || this.grazeStreak % 4 === 0) {
       this.fx.floatText(x, y - 22, `+${bonus}`, "#cce8ff");
+    }
+    // Onda 7: marco de rasante
+    if (this.grazeStreak === 10) {
+      this.pushToast("Rasante x10!", "loot");
+      this._addScore(500);
+      this.fx.floatText(x, y - 36, "+500 RASANTE", "#9ad4ff", { pop: true });
+      this._buzz([12, 24, 12]);
     }
     this._buzz(8);
   }

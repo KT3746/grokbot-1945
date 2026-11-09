@@ -1,3 +1,9 @@
+## Onda 7
+
+- Aviso **Sem dano!** no meio do estágio
+- **Rasante x10!** com bônus de pontos
+- Botão **Bomba** pisca quando está pronta
+
 # 1945
 
 Shoot-em-up vertical original (vista de cima), no clima dos fliperamas de avião dos anos 80. Nomes, história, arte e sons são **próprios** — nada de marcas de terceiros. Tudo em português do Brasil.

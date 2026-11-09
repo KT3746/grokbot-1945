@@ -1402,3 +1402,16 @@ body.hit-flash #board-wrap::before {
 .toast-record, #toast[data-kind="record"] { color: #ffe08a !important; text-shadow: 0 0 14px #e0b84acc; }
 @media (prefers-reduced-motion: reduce) { .boss-bar.boss-rage i { animation: none; } }
 .stage-perfect { color: #9ef0b8 !important; text-shadow: 0 0 12px #7dce9a99; }
+
+/* ===== Wave 7: bomba pronta, rasante x10, sem dano mid ===== */
+#btn-bomb.bomb-ready:not(.bomb-empty) {
+  box-shadow: 0 0 0 2px rgba(255, 180, 60, 0.7), 0 0 16px rgba(255, 150, 40, 0.45);
+  animation: bomb-ready-pulse 1.1s ease-in-out infinite;
+}
+@keyframes bomb-ready-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #btn-bomb.bomb-ready:not(.bomb-empty) { animation: none; }
+}
