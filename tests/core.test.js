@@ -139,8 +139,8 @@ test("versão 1.17.0 wave-7 e cache-bust alinhados", () => {
   const qs = html.match(/\?v=([0-9]+)/g) || [];
   assert.ok(qs.length >= 3);
   for (const q of qs) assert.equal(q, `?v=${CACHE_V}`);
-  assert.match(html, /id="title-ver">v1\.16\.1</);
-  assert.match(html, /id="ver"[^>]*>v1\.16\.1</);
+  assert.match(html, /id="title-ver">v1\.17\.0</);
+  assert.match(html, /id="ver"[^>]*>v1\.17\.0</);
   assert.match(html, /type="importmap"/);
   assert.match(html, /js\/vendor\/three\.module\.js/);
   assert.match(html, /id="view3d"/);
