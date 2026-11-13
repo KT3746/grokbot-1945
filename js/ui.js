@@ -247,7 +247,7 @@ export class UI {
       }
       if (this.els.stageMeta) {
         this.els.stageMeta.textContent =
-          `Estágios limpos (total): ${this.game.stagesCleared | 0} · Nesta run: ${this.game.runStages | 0}`;
+          `Estágios limpos (total): ${this.game.stagesCleared | 0} · Nesta partida: ${this.game.runStages | 0}`;
       }
       const next = document.getElementById("btn-next");
       if (next) {
@@ -268,10 +268,18 @@ export class UI {
       if (this.els.overDaily) this.els.overDaily.textContent = String(g.dailyHigh | 0);
       if (this.els.overRunStages) this.els.overRunStages.textContent = String(g.runStages | 0);
       if (this.els.overText) {
-        this.els.overText.textContent =
-          g.runStages > 0
-            ? `Você chegou a ${meta.name} · ${g.runStages} estágio(s) limpo(s) nesta run.`
-            : `O Falcão-Vértice caiu em ${meta.name}.`;
+        /* Onda 8: plural certo + gancho de recorde ("faltaram N pts") */
+        const n = g.runStages | 0;
+        const base = n > 0
+          ? `Você chegou a ${meta.name} · ${n} ${n === 1 ? "estágio limpo" : "estágios limpos"}.`
+          : `O Falcão-Vértice caiu em ${meta.name}.`;
+        const prev = g.runHighStart | 0;
+        const chase = prev > 0 && g.score > prev
+          ? ` Recorde batido por ${g.score - prev} pts!`
+          : g.score < (g.high | 0)
+            ? ` Faltaram ${(g.high | 0) - g.score} pts pro recorde.`
+            : "";
+        this.els.overText.textContent = base + chase;
       }
       if (this.els.overEyebrow) {
         this.els.overEyebrow.textContent = g.newDaily ? "Novo marco" : "Mayday";

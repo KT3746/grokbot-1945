@@ -830,7 +830,7 @@ export class Renderer {
       ctx.shadowBlur = 0;
       ctx.font = "700 10px Barlow, sans-serif";
       ctx.fillStyle = "#f4f7facc";
-      ctx.fillText("MULTIKILL", 0, 14);
+      ctx.fillText("ABATE EM SÉRIE", 0, 14);
     }
     ctx.restore();
   }

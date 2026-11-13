@@ -1415,3 +1415,14 @@ body.hit-flash #board-wrap::before {
 @media (prefers-reduced-motion: reduce) {
   #btn-bomb.bomb-ready:not(.bomb-empty) { animation: none; }
 }
+
+/* ===== Onda 8 ===== */
+/* celular: barra de missão ao lado de Som/Pausa (antes ficava escondida atrás dos botões) */
+@media (max-width: 720px) {
+  .mission-bar { left: 124px; top: 12px; }
+}
+/* PC: placar não espreme a marca "1945 · estágio" */
+@media (min-width: 900px) and (min-height: 560px) {
+  #frame { width: min(720px, 100%); }
+  .brand { min-width: max-content; }
+}
