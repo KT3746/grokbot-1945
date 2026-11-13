@@ -1264,6 +1264,8 @@ export class Game {
   }
 
   _checkStage() {
+    /* Onda 8: o chefe já fechou o estágio neste quadro — não conta (nem paga bônus) duas vezes. */
+    if (this.mode !== "playing") return;
     const script = STAGES[this.stageIndex].waves;
     if (this.waveI < script.length) return;
     const alive = this.enemies.some((e) => !e.dead);

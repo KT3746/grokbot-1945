@@ -1,3 +1,10 @@
+## Onda 8 (v1.18.0)
+
+- **Bônus de estágio não dobra mais**: ao derrubar o chefe, o estágio contava duas vezes (bônus Sem dano/Bombas pago em dobro e "2 estágios limpos" depois do primeiro).
+- **Barra de missão visível no celular**: saiu de trás dos botões Som/Pausa. No PC a marca "1945" não fica mais cortada pelo placar.
+- **Fim de jogo honesto**: botão **Jogar de novo** (antes "Continuar voando", que recomeçava do zero), plural certo e o gancho "Faltaram N pts pro recorde". "MULTIKILL" virou **ABATE EM SÉRIE**.
+- Cache-bust `?v=202611130030`.
+
 ## Onda 7
 
 - Aviso **Sem dano!** no meio do estágio

@@ -148,3 +148,35 @@ test("weaponTimer e haptic: barra do power-up e vibração em hit", async () => 
   assert.ok(g.bombs >= before);
   assert.ok(g.bombGain > 0);
 });
+
+test("onda 8: matar o chefe fecha o estágio uma vez só (bônus e contagem não dobram)", async () => {
+  const { STAGES } = await import("../js/stages.js");
+  const game = new Game(silentAudio());
+  game.start(0);
+  game.waveI = STAGES[0].waves.length;
+  game.pendingBoss = true;
+  game.enemies.length = 0;
+  game._spawnBoss();
+  const boss = game.boss;
+  assert.ok(boss, "chefe nasceu");
+  const scoreBefore = game.score;
+  game._kill(boss, false);
+  assert.equal(game.mode, "stageclear");
+  const afterKill = game.score;
+  game.mode = "stageclear";
+  game._checkStage();
+  assert.equal(game.runStages, 1);
+  assert.equal(game.score, afterKill);
+  assert.ok(afterKill > scoreBefore);
+  // e via update completo no mesmo quadro
+  const g2 = new Game(silentAudio());
+  g2.start(0);
+  g2.waveI = STAGES[0].waves.length;
+  g2.pendingBoss = true;
+  g2.enemies.length = 0;
+  g2._spawnBoss();
+  g2.boss.hp = 0.01;
+  g2._kill(g2.boss, false);
+  g2.update(0.016, fakeInput());
+  assert.equal(g2.runStages, 1);
+});
